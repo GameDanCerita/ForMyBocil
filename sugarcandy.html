@@ -103,50 +103,33 @@
       min-height: max(884px, 100dvh);
     }
     @keyframes floatUp {
-      0% { transform: translateY(0) scale(1); opacity: 1; }
-      100% { transform: translateY(-40px) scale(1.5); opacity: 0; }
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-30px); opacity: 0; }
     }
     .float-anim {
-      animation: floatUp 1s ease-out forwards;
-    }
-    @keyframes explode {
-      0% { transform: scale(1) translate(0, 0); opacity: 1; }
-      100% { transform: scale(0.5) translate(var(--tx), var(--ty)); opacity: 0; }
-    }
-    .particle {
-      animation: explode 0.6s ease-out forwards;
+      animation: floatUp 0.6s ease-out forwards;
     }
 
-    /* Animation Classes for Candy Movement */
+    /* Animasi Permen Ringan */
     .candy-item {
-      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
+      transition: transform 0.18s ease-out, opacity 0.15s ease;
       will-change: transform, opacity;
     }
     
     .candy-pop {
-      animation: popOut 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      animation: popOut 0.18s ease-out forwards;
     }
 
     @keyframes popOut {
       0% { transform: scale(1); }
-      50% { transform: scale(1.3); }
+      50% { transform: scale(1.15); }
       100% { transform: scale(0); opacity: 0; }
-    }
-
-    .candy-bounce {
-      animation: bounceLand 0.3s cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
-    }
-
-    @keyframes bounceLand {
-      0% { transform: translateY(-10px); }
-      50% { transform: translateY(4px); }
-      100% { transform: translateY(0); }
     }
   </style>
 </head>
 <body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen relative overflow-hidden">
 
-<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(255,105,180,0.08)]">
+<header class="fixed top-0 w-full z-50 bg-surface/95 border-b border-surface-container-high pt-safe">
   <div class="h-16 px-container-margin flex items-center gap-md">
     <button class="w-10 h-10 flex items-center justify-center text-primary active:scale-90 transition-transform" onclick="history.back()">
       <span class="material-symbols-outlined">chevron_left</span>
@@ -157,15 +140,13 @@
 
 <main class="flex-1 relative w-full pt-16 pb-24 bg-transparent z-10">
   <div class="flex flex-col w-full px-container-margin pb-container-margin h-full overflow-hidden">
-    <div class="flex justify-between items-center py-md mt-sm bg-surface-container-highest rounded-2xl px-lg shadow-sm mb-lg relative overflow-hidden">
-      <div class="absolute -top-4 -left-4 w-16 h-16 bg-primary-fixed/30 rounded-full blur-xl"></div>
-      <div class="absolute -bottom-4 -right-4 w-16 h-16 bg-secondary-fixed/30 rounded-full blur-xl"></div>
+    <div class="flex justify-between items-center py-md mt-sm bg-surface-container-highest rounded-2xl px-lg mb-lg relative overflow-hidden">
       <div class="flex flex-col relative z-10">
         <span class="font-label-sm text-on-surface-variant uppercase tracking-wider">Score</span>
         <span class="font-headline-lg text-primary" id="score-display">0</span>
       </div>
       <div class="flex flex-col items-center relative z-10">
-        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(255,105,180,0.15)] relative" id="timer-container">
+        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center relative" id="timer-container">
           <svg class="absolute w-full h-full -rotate-90" viewbox="0 0 36 36">
             <circle class="stroke-surface-container-low" cx="18" cy="18" fill="none" r="16" stroke-width="4"></circle>
             <circle class="stroke-tertiary transition-all duration-1000 ease-linear" cx="18" cy="18" fill="none" id="timer-ring" r="16" stroke-dasharray="100 100" stroke-dashoffset="0" stroke-width="4"></circle>
@@ -180,23 +161,20 @@
     </div>
 
     <div class="flex-1 flex flex-col justify-center items-center relative">
-      <div class="grid grid-cols-8 grid-rows-8 gap-1 p-2 bg-surface-container-lowest rounded-2xl shadow-[0_8px_30px_rgba(255,105,180,0.1)] w-full max-w-[400px] aspect-square relative z-10 touch-none" id="game-board">
+      <div class="grid grid-cols-8 grid-rows-8 gap-1 p-2 bg-surface-container-lowest rounded-2xl border border-surface-container-high w-full max-w-[400px] aspect-square relative z-10 touch-none" id="game-board">
       </div>
-      <div class="absolute top-[10%] left-[-5%] text-3xl opacity-50 animate-[bounce_4s_infinite] pointer-events-none">✨</div>
-      <div class="absolute bottom-[20%] right-[-5%] text-2xl opacity-40 animate-[bounce_5s_infinite_0.5s] pointer-events-none">✨</div>
     </div>
 
     <div class="mt-lg flex justify-center">
-      <button class="flex items-center gap-2 bg-surface-container px-lg py-sm rounded-full text-on-surface shadow-sm active:scale-95 transition-transform" id="pause-btn">
+      <button class="flex items-center gap-2 bg-surface-container px-lg py-sm rounded-full text-on-surface active:scale-95 transition-transform" id="pause-btn">
         <span class="material-symbols-outlined text-primary">pause</span>
         <span class="font-label-bold">Pause</span>
       </button>
     </div>
 
     <!-- Game Over Modal -->
-    <div class="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center p-container-margin opacity-0 transition-opacity duration-300" id="game-over-modal">
-      <div class="bg-surface w-full max-w-sm rounded-[32px] p-xl flex flex-col items-center text-center shadow-xl transform scale-95 transition-transform duration-300 origin-center relative overflow-hidden" id="modal-content">
-        <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(circle, #ffb0d0 2px, transparent 2px), radial-gradient(circle, #d6beff 2px, transparent 2px); background-size: 20px 20px, 30px 30px; background-position: 0 0, 15px 15px;"></div>
+    <div class="fixed inset-0 bg-black/60 z-[100] hidden flex-col items-center justify-center p-container-margin opacity-0 transition-opacity duration-200" id="game-over-modal">
+      <div class="bg-surface w-full max-w-sm rounded-[32px] p-xl flex flex-col items-center text-center transform scale-95 transition-transform duration-200 origin-center relative overflow-hidden" id="modal-content">
         <div class="w-20 h-20 bg-primary-container rounded-full flex items-center justify-center mb-lg relative z-10">
           <span class="text-4xl">🎉</span>
         </div>
@@ -207,7 +185,7 @@
           <span class="font-headline-lg text-primary" id="final-score">0</span>
           <div class="hidden mt-2 bg-tertiary text-on-tertiary font-label-bold text-[10px] px-2 py-1 rounded-full uppercase" id="new-best-badge">New Best!</div>
         </div>
-        <button class="w-full bg-gradient-to-b from-primary to-[#8c0058] text-on-primary font-body-lg py-md rounded-xl shadow-[0_4px_14px_rgba(172,36,113,0.4)] active:scale-95 transition-transform relative z-10" id="restart-btn">
+        <button class="w-full bg-primary text-on-primary font-body-lg py-md rounded-xl active:scale-95 transition-transform relative z-10" id="restart-btn">
           Main Lagi
         </button>
       </div>
@@ -252,20 +230,20 @@
         if(type === 'pop') {
           osc.type = 'sine';
           osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
-          gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+          osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
+          gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
           osc.start();
-          osc.stop(audioCtx.currentTime + 0.1);
+          osc.stop(audioCtx.currentTime + 0.08);
         } else if (type === 'win') {
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
           osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
           osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2);
-          gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-          gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+          gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
           osc.start();
-          osc.stop(audioCtx.currentTime + 0.5);
+          osc.stop(audioCtx.currentTime + 0.4);
         }
       }
 
@@ -304,7 +282,8 @@
           square.innerHTML = candyTypes[randomColor];
           grid.push(candyTypes[randomColor]);
           
-          square.className = 'candy-item relative w-full h-full flex items-center justify-center text-3xl cursor-pointer select-none bg-white rounded-lg shadow-sm touch-none drop-shadow-md hover:scale-105';
+          // Dihapus: shadow-sm, drop-shadow-md, hover:scale (penyebab utama lag pada GPU/CPU)
+          square.className = 'candy-item relative w-full h-full flex items-center justify-center text-3xl cursor-pointer select-none bg-white rounded-lg touch-none';
           
           square.addEventListener('dragstart', dragStart);
           square.addEventListener('dragover', dragOver);
@@ -335,7 +314,7 @@
         draggedCandy = touchElement;
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
-        touchElement.classList.add('scale-110', 'z-20', 'shadow-md');
+        touchElement.classList.add('scale-105', 'z-20');
       }
       
       function handleTouchMove(e) {
@@ -347,7 +326,7 @@
         if(isAnimating || !touchElement) return;
         e.preventDefault();
         
-        touchElement.classList.remove('scale-110', 'z-20', 'shadow-md');
+        touchElement.classList.remove('scale-105', 'z-20');
         
         const touchEndX = e.changedTouches[0].clientX;
         const touchEndY = e.changedTouches[0].clientY;
@@ -473,14 +452,14 @@
               replacedCandy.style.transition = '';
 
               isAnimating = false;
-            }, 200);
+            }, 180);
           } else {
             playSound('pop');
             setTimeout(() => {
               moveDownWithAnimation();
-            }, 250);
+            }, 200);
           }
-        }, 250);
+        }, 180);
       }
 
       function checkMatchesAndClear() {
@@ -516,7 +495,7 @@
 
           matchedIndices.forEach(idx => {
             const el = document.getElementById(idx);
-            createExplosion(el, grid[idx]);
+            // Dihapus: createExplosion (penyebab DOM thrashing)
             el.classList.add('candy-pop');
             grid[idx] = '';
           });
@@ -573,7 +552,7 @@
 
             el.offsetHeight;
 
-            el.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.25, 0.64, 1)';
+            el.style.transition = 'transform 0.2s ease-out';
             el.style.transform = 'translateY(0)';
           } else {
             el.innerHTML = grid[i];
@@ -581,23 +560,15 @@
         }
 
         setTimeout(() => {
-          for (let i = 0; i < width * width; i++) {
-            if (dropDistances[i] > 0) {
-              const el = document.getElementById(i);
-              el.classList.add('candy-bounce');
-              setTimeout(() => el.classList.remove('candy-bounce'), 300);
-            }
-          }
-
           if (checkMatchesAndClear()) {
             playSound('pop');
             setTimeout(() => {
               moveDownWithAnimation();
-            }, 300);
+            }, 200);
           } else {
             isAnimating = false;
           }
-        }, 320);
+        }, 220);
       }
 
       function showFloatingText(element, text) {
@@ -605,41 +576,22 @@
         const rect = element.getBoundingClientRect();
         const floatingEl = document.createElement('div');
         floatingEl.textContent = text;
-        floatingEl.className = 'fixed font-label-bold text-tertiary text-lg z-50 float-anim pointer-events-none drop-shadow-md';
+        floatingEl.className = 'fixed font-label-bold text-tertiary text-lg z-50 float-anim pointer-events-none';
         floatingEl.style.left = `${rect.left + rect.width / 2 - 15}px`;
         floatingEl.style.top = `${rect.top}px`;
         document.body.appendChild(floatingEl);
         
-        setTimeout(() => { floatingEl.remove(); }, 1000);
-      }
-      
-      function createExplosion(element, emoji) {
-        const rect = element.getBoundingClientRect();
-        for(let j=0; j<3; j++) {
-          const particle = document.createElement('div');
-          particle.innerHTML = emoji;
-          particle.className = 'fixed text-xl z-40 particle pointer-events-none';
-          particle.style.left = `${rect.left + rect.width/4}px`;
-          particle.style.top = `${rect.top + rect.height/4}px`;
-          
-          const tx = (Math.random() - 0.5) * 100 + 'px';
-          const ty = (Math.random() - 0.5) * 100 + 'px';
-          particle.style.setProperty('--tx', tx);
-          particle.style.setProperty('--ty', ty);
-          
-          document.body.appendChild(particle);
-          setTimeout(() => particle.remove(), 600);
-        }
+        setTimeout(() => { floatingEl.remove(); }, 600);
       }
 
       function addTime(seconds) {
         time = Math.min(60, time + seconds);
         updateTimerDisplay();
         
-        timeDisplay.classList.add('text-tertiary', 'scale-125');
+        timeDisplay.classList.add('text-tertiary', 'scale-110');
         setTimeout(() => {
-          timeDisplay.classList.remove('text-tertiary', 'scale-125');
-        }, 300);
+          timeDisplay.classList.remove('text-tertiary', 'scale-110');
+        }, 200);
       }
 
       function tick() {
@@ -659,13 +611,11 @@
         if(time <= 10) {
           timerRing.classList.remove('stroke-tertiary');
           timerRing.classList.add('stroke-error');
-          timeDisplay.classList.add('text-error', 'animate-bounce', 'font-headline-lg');
-          timerContainer.classList.add('shadow-[0_0_15px_rgba(186,26,26,0.5)]');
+          timeDisplay.classList.add('text-error', 'font-headline-lg');
         } else {
           timerRing.classList.add('stroke-tertiary');
           timerRing.classList.remove('stroke-error');
-          timeDisplay.classList.remove('text-error', 'animate-bounce', 'font-headline-lg');
-          timerContainer.classList.remove('shadow-[0_0_15px_rgba(186,26,26,0.5)]');
+          timeDisplay.classList.remove('text-error', 'font-headline-lg');
         }
       }
 
@@ -716,14 +666,14 @@
   </script>
 </main>
 
-<nav class="fixed bottom-0 w-full bg-surface-container-lowest border-t border-surface-container-high pb-safe z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+<nav class="fixed bottom-0 w-full bg-surface-container-lowest border-t border-surface-container-high pb-safe z-50">
   <div class="flex justify-around items-center h-16">
     <a class="flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-primary transition-colors" href="#">
       <span class="material-symbols-outlined text-[28px] mb-1">home</span>
       <span class="font-label-sm text-[10px]">Home</span>
     </a>
     <a class="flex flex-col items-center justify-center w-full h-full text-primary transition-colors relative" href="#">
-      <div class="absolute -top-3 bg-primary-container text-on-primary-container w-12 h-12 rounded-full flex items-center justify-center shadow-md">
+      <div class="absolute -top-3 bg-primary-container text-on-primary-container w-12 h-12 rounded-full flex items-center justify-center">
         <span class="material-symbols-outlined text-[28px]">sports_esports</span>
       </div>
       <span class="font-label-sm text-[10px] mt-6">Games</span>
