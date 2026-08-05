@@ -228,7 +228,6 @@
           </button>
         </div>
 
-        <!-- Posisi Rubah Digeser Lebih Tinggi ke Atas (-mt-8 dan -translate-y-8) -->
         <div id="fox-target-zone" class="relative w-full flex-1 flex flex-col items-center justify-center -mt-8 -mb-4">
           <div id="hatch-hint" class="hidden absolute top-0 flex flex-col items-center z-10 animate-pulse-arrow">
             <span class="material-symbols-outlined text-3xl text-primary font-bold">arrow_downward</span>
@@ -238,7 +237,7 @@
           <canvas id="foxCanvasRoom1" width="320" height="260" class="cursor-pointer active:scale-95 transition-transform z-10 -translate-y-8"></canvas>
         </div>
 
-        <div class="w-full max-w-xs bg-surface/90 backdrop-blur-md p-2 rounded-2xl shadow-md border border-outline-variant/40 flex flex-col items-center gap-1 z-10 mb-2">
+        <div class="w-full max-w-xs bg-surface/90 backdrop-blur-md p-2 rounded-2xl shadow-md border border-outline-variant/40 flex flex-col items-center gap-1 z-10 mb-4">
           <p class="text-[11px] font-bold text-on-surface-variant flex items-center gap-1">
             <span class="material-symbols-outlined text-xs text-primary">touch_app</span> Drag makanan ke rubah! (4x = +1%)
           </p>
@@ -258,7 +257,7 @@
           <canvas id="playCanvas" width="340" height="280" class="w-full h-full max-w-[340px] max-h-[280px] touch-none cursor-grab active:cursor-grabbing z-10 -translate-y-4"></canvas>
         </div>
 
-        <div class="w-full max-w-xs bg-surface/90 backdrop-blur-md p-2 rounded-2xl text-center shadow-md border border-outline-variant/40 z-10 mb-2">
+        <div class="w-full max-w-xs bg-surface/90 backdrop-blur-md p-2 rounded-2xl text-center shadow-md border border-outline-variant/40 z-10 mb-4">
           <p class="text-xs font-bold text-on-surface-variant flex items-center justify-center gap-1">
             <span class="material-symbols-outlined text-sm text-primary">sports_baseball</span>
             Tarik & lempar bola untuk bermain!
@@ -274,11 +273,13 @@
           </span>
         </div>
 
-        <div class="relative w-full flex-1 flex flex-col items-center justify-center z-20 -mt-6">
-          <canvas id="foxCanvasRoom3" width="320" height="260" class="-translate-y-6"></canvas>
+        <!-- Canvas Karakter Kamar Tidur Dinaikkan (-translate-y-12) -->
+        <div class="relative w-full flex-1 flex flex-col items-center justify-center z-20 -mt-10">
+          <canvas id="foxCanvasRoom3" width="320" height="260" class="-translate-y-12"></canvas>
         </div>
 
-        <div class="w-full max-w-xs bg-surface/90 backdrop-blur-md p-2 rounded-2xl shadow-md border border-outline-variant/40 flex items-center justify-between z-20 mb-2">
+        <!-- Bar Lampu Menyala Dinaikkan Posisi dan Margin Bawahnya (mb-8) -->
+        <div class="w-full max-w-xs bg-surface/90 backdrop-blur-md p-2 rounded-2xl shadow-md border border-outline-variant/40 flex items-center justify-between z-20 -translate-y-4 mb-4">
           <div class="flex items-center gap-2">
             <span id="lamp-icon" class="material-symbols-outlined text-amber-500 text-2xl">lightbulb</span>
             <span id="lamp-status" class="text-xs font-bold text-on-surface-variant">Lampu Menyala</span>
@@ -293,8 +294,8 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation Tabs for Room Selection (Makan, Bermain, Tidur) -->
-  <nav class="w-full bg-surface/95 backdrop-blur-md px-2 py-2 shadow-lg z-30 border-t border-outline-variant/40 flex justify-around shrink-0 pb-3">
+  <!-- Bottom Navigation Tabs (Makan, Bermain, Tidur) Dinaikkan dengan margin negatif (-mt-3) & penyesuaian padding -->
+  <nav class="w-full bg-surface/95 backdrop-blur-md px-2 pt-2 pb-5 shadow-2xl z-30 border-t border-outline-variant/40 flex justify-around shrink-0 -mt-3">
     <button id="tab-0" onclick="goToRoom(0)" class="tab-btn active flex-1 py-1.5 rounded-xl flex flex-col items-center gap-0.5 text-xs font-bold text-on-surface-variant transition-all">
       <span class="material-symbols-outlined text-lg">restaurant</span>
       Makan
@@ -591,7 +592,6 @@
       ctx.save();
       
       const centerX = width / 2;
-      // Posisi centerY dinaikkan lagi agar rubah berada lebih tinggi
       const centerY = height / 2 - 18;
 
       if (roomType === 'kitchen') {
