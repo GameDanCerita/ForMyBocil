@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+  <title>Puzzle Pasang Custom</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#ac2471",
+            "primary-container": "#ff69b4",
+            "on-primary": "#ffffff",
+            "surface": "#fff8f8",
+            "surface-container": "#ffe8ef",
+            "surface-container-high": "#f9e3e9",
+            "on-surface": "#24181d",
+            "on-surface-variant": "#564149",
+            "outline-variant": "#dcbfc9",
+          },
+          fontFamily: {
+            sans: ["Quicksand", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .puzzle-piece {
+      cursor: grab;
+      touch-action: none;
+      filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.25));
+      transition: filter 0.1s ease;
+    }
+    .puzzle-piece:active {
+      cursor: grabbing;
+      filter: drop-shadow(0px 6px 10px rgba(0,0,0,0.35));
+    }
+    .puzzle-piece.placed {
+      cursor: default;
+      filter: none;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="bg-surface font-sans text-on-surface min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="w-full bg-surface/80 backdrop-blur-md p-4 shadow-sm flex items-center gap-4 z-10">
+    <button onclick="history.back()" class="w-10 h-10 flex items-center justify-center text-primary active:scale-90 transition-transform">
+      <span class="material-symbols-outlined text-3xl">chevron_left</span>
+    </button>
+    <h1 class="font-bold text-xl text-on-surface">Puzzle Pasang</h1>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 flex flex-col max-w-md w-full mx-auto p-4 gap-4 justify-between">
+    
+    <!-- Controls -->
+    <div class="bg-surface-container rounded-2xl p-4 shadow-sm flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <h2 class="font-bold text-lg">Pilih Foto & Tingkat Kesulitan</h2>
+        <span class="material-symbols-outlined text-primary text-2xl">extension</span>
+      </div>
+      
+      <div class="flex gap-2">
+        <label for="image-upload" class="flex-1 bg-primary text-on-primary font-bold py-2 px-3 rounded-xl text-center shadow-md cursor-pointer active:scale-95 transition-transform flex items-center justify-center gap-2 text-xs">
+          <span class="material-symbols-outlined text-base">upload_file</span>
+          Upload Foto
+        </label>
+        <input type="file" id="image-upload" accept="image/*" class="hidden"/>
+
+        <!-- Grid Options (Ukuran Potongan Kecil) -->
+        <div class="flex gap-1 bg-surface-container-high p-1 rounded-xl">
+          <button id="btn-4x4" class="px-2.5 py-1 rounded-lg bg-primary text-on-primary font-bold text-xs">4x4</button>
+          <button id="btn-6x6" class="px-2.5 py-1 rounded-lg bg-transparent text-on-surface-variant font-bold text-xs">6x6</button>
+          <button id="btn-8x8" class="px-2.5 py-1 rounded-lg bg-transparent text-on-surface-variant font-bold text-xs">8x8</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Board Penyusunan (Drop Area) -->
+    <div class="flex flex-col items-center">
+      <div class="flex justify-between w-full mb-2 px-1 text-sm font-bold text-on-surface-variant">
+        <span>Papan Penyusunan</span>
+        <span id="progress-text">0 / 16 Terpasang</span>
+      </div>
+      <div id="puzzle-board" class="relative w-[320px] h-[320px] bg-surface-container-high rounded-2xl border-2 border-dashed border-outline-variant shadow-inner overflow-hidden">
+        <!-- Area tempat kepingan akan menempel -->
+      </div>
+    </div>
+
+    <!-- Area Nampan Kepingan -->
+    <div class="flex-1 flex flex-col min-h-[200px]">
+      <span class="text-sm font-bold text-on-surface-variant mb-2 px-1">Area Kepingan (Tarik ke papan)</span>
+      <div id="puzzle-tray" class="relative w-full h-[220px] bg-surface-container rounded-2xl border border-outline-variant/40 shadow-inner overflow-hidden">
+        <!-- Kepingan puzzle acak -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Overlay Kemenangan -->
+  <div id="win-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-surface p-6 rounded-3xl text-center shadow-2xl max-w-xs w-full flex flex-col items-center gap-4 animate-bounce">
+      <span class="material-symbols-outlined text-6xl text-primary">celebration</span>
+      <h3 class="text-2xl font-bold">Luar Biasa! 🎉</h3>
+      <p class="text-sm text-on-surface-variant">Kamu berhasil menyusun semua kepingan puzzle dengan presisi!</p>
+      <button id="btn-restart" class="bg-primary text-on-primary font-bold py-3 px-6 rounded-full shadow-lg active:scale-95 transition-transform flex items-center gap-2">
+        <span class="material-symbols-outlined">replay</span> Main Lagi
+      </button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const uploadInput = document.getElementById('image-upload');
+      const board = document.getElementById('puzzle-board');
+      const tray = document.getElementById('puzzle-tray');
+      const progressText = document.getElementById('progress-text');
+      const winOverlay = document.getElementById('win-overlay');
+      const btnRestart = document.getElementById('btn-restart');
+      
+      const btn4x4 = document.getElementById('btn-4x4');
+      const btn6x6 = document.getElementById('btn-6x6');
+      const btn8x8 = document.getElementById('btn-8x8');
+
+      let gridSize = 4;
+      let pieceWidth = 320 / gridSize;
+      let pieceHeight = 320 / gridSize;
+      let pieces = [];
+      let placedCount = 0;
+      let currentImage = null;
+
+      // Gambar Default
+      const defaultImage = new Image();
+      defaultImage.crossOrigin = "Anonymous";
+      defaultImage.src = 'https://picsum.photos/600/600';
+      defaultImage.onload = () => {
+        currentImage = defaultImage;
+        initGame();
+      };
+
+      // Switch Grid Handler
+      btn4x4.addEventListener('click', () => setGrid(4));
+      btn6x6.addEventListener('click', () => setGrid(6));
+      btn8x8.addEventListener('click', () => setGrid(8));
+
+      function setGrid(size) {
+        gridSize = size;
+        pieceWidth = 320 / gridSize;
+        pieceHeight = 320 / gridSize;
+
+        const activeClass = "px-2.5 py-1 rounded-lg bg-primary text-on-primary font-bold text-xs";
+        const inactiveClass = "px-2.5 py-1 rounded-lg bg-transparent text-on-surface-variant font-bold text-xs";
+
+        btn4x4.className = size === 4 ? activeClass : inactiveClass;
+        btn6x6.className = size === 6 ? activeClass : inactiveClass;
+        btn8x8.className = size === 8 ? activeClass : inactiveClass;
+
+        if (currentImage) initGame();
+      }
+
+      // Handle Custom Image Upload
+      uploadInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+              currentImage = img;
+              initGame();
+            };
+            img.src = event.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // Edge Generator (Lock shapes)
+      function generateEdges(rows, cols) {
+        const edges = [];
+        for (let r = 0; r < rows; r++) {
+          edges[r] = [];
+          for (let c = 0; c < cols; c++) {
+            edges[r][c] = { top: 0, right: 0, bottom: 0, left: 0 };
+          }
+        }
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            if (c < cols - 1) {
+              const shape = Math.random() < 0.5 ? 1 : -1;
+              edges[r][c].right = shape;
+              edges[r][c + 1].left = -shape;
+            }
+            if (r < rows - 1) {
+              const shape = Math.random() < 0.5 ? 1 : -1;
+              edges[r][c].bottom = shape;
+              edges[r + 1][c].top = -shape;
+            }
+          }
+        }
+        return edges;
+      }
+
+      function drawPuzzlePath(ctx, w, h, edge, padding) {
+        const x = padding;
+        const y = padding;
+        const tabSize = Math.min(w, h) * 0.22;
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+
+        if (edge.top === 0) ctx.lineTo(x + w, y);
+        else drawTab(ctx, x, y, x + w, y, edge.top, tabSize);
+
+        if (edge.right === 0) ctx.lineTo(x + w, y + h);
+        else drawTab(ctx, x + w, y, x + w, y + h, edge.right, tabSize);
+
+        if (edge.bottom === 0) ctx.lineTo(x, y + h);
+        else drawTab(ctx, x + w, y + h, x, y + h, edge.bottom, tabSize);
+
+        if (edge.left === 0) ctx.lineTo(x, y);
+        else drawTab(ctx, x, y + h, x, y, edge.left, tabSize);
+
+        ctx.closePath();
+      }
+
+      function drawTab(ctx, x1, y1, x2, y2, dir, tabSize) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const len = Math.hypot(dx, dy);
+        const nx = dx / len;
+        const ny = dy / len;
+        const px = -ny * dir;
+        const py = nx * dir;
+
+        ctx.lineTo(x1 + dx * 0.35, y1 + dy * 0.35);
+        ctx.bezierCurveTo(
+          x1 + dx * 0.35 + px * tabSize, y1 + dy * 0.35 + py * tabSize,
+          x1 + dx * 0.65 + px * tabSize, y1 + dy * 0.65 + py * tabSize,
+          x1 + dx * 0.65, y1 + dy * 0.65
+        );
+        ctx.lineTo(x2, y2);
+      }
+
+      function initGame() {
+        board.innerHTML = '';
+        tray.innerHTML = '';
+        winOverlay.classList.add('opacity-0', 'pointer-events-none');
+        placedCount = 0;
+        pieces = [];
+        progressText.textContent = `0 / ${gridSize * gridSize} Terpasang`;
+
+        const edges = generateEdges(gridSize, gridSize);
+        const padding = 12;
+
+        for (let r = 0; r < gridSize; r++) {
+          for (let c = 0; c < gridSize; c++) {
+            const canvas = document.createElement('canvas');
+            const cw = pieceWidth + padding * 2;
+            const ch = pieceHeight + padding * 2;
+            canvas.width = cw;
+            canvas.height = ch;
+            const ctx = canvas.getContext('2d');
+
+            const edge = edges[r][c];
+
+            drawPuzzlePath(ctx, pieceWidth, pieceHeight, edge, padding);
+            ctx.clip();
+
+            const srcX = (c * currentImage.width) / gridSize;
+            const srcY = (r * currentImage.height) / gridSize;
+            const srcW = currentImage.width / gridSize;
+            const srcH = currentImage.height / gridSize;
+
+            ctx.drawImage(
+              currentImage,
+              srcX, srcY, srcW, srcH,
+              padding, padding, pieceWidth, pieceHeight
+            );
+
+            ctx.lineWidth = 1.2;
+            ctx.strokeStyle = "rgba(0,0,0,0.2)";
+            drawPuzzlePath(ctx, pieceWidth, pieceHeight, edge, padding);
+            ctx.stroke();
+
+            canvas.className = 'puzzle-piece absolute';
+            canvas.style.width = `${cw}px`;
+            canvas.style.height = `${ch}px`;
+
+            const targetX = c * pieceWidth - padding;
+            const targetY = r * pieceHeight - padding;
+
+            const trayBounds = tray.getBoundingClientRect();
+            const randomX = Math.random() * Math.max(10, trayBounds.width - cw);
+            const randomY = Math.random() * Math.max(10, trayBounds.height - ch);
+
+            canvas.style.left = `${randomX}px`;
+            canvas.style.top = `${randomY}px`;
+
+            tray.appendChild(canvas);
+
+            const pieceData = {
+              el: canvas,
+              row: r,
+              col: c,
+              targetX: targetX,
+              targetY: targetY,
+              padding: padding,
+              isPlaced: false
+            };
+
+            pieces.push(pieceData);
+            makeDraggable(pieceData);
+          }
+        }
+      }
+
+      // Drag & Drop Presisi 1:1 Tanpa Jarak/Offset
+      function makeDraggable(piece) {
+        const el = piece.el;
+
+        const onStart = (e) => {
+          if (piece.isPlaced) return;
+
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+          // Hitung jarak persis sentuhan dari pojok kiri-atas kepingan
+          const rect = el.getBoundingClientRect();
+          const offsetX = clientX - rect.left;
+          const offsetY = clientY - rect.top;
+
+          // Pindahkan elemen ke Body secara Fixed agar pergerakan sejajar sempurna dengan jari
+          document.body.appendChild(el);
+          el.style.position = 'fixed';
+          el.style.left = `${clientX - offsetX}px`;
+          el.style.top = `${clientY - offsetY}px`;
+          el.style.zIndex = '1000';
+
+          const onMove = (eMove) => {
+            if (eMove.cancelable) eMove.preventDefault();
+
+            const curX = eMove.touches ? eMove.touches[0].clientX : eMove.clientX;
+            const curY = eMove.touches ? eMove.touches[0].clientY : eMove.clientY;
+
+            // Posisikan elemen tepat di bawah jari/kursor
+            el.style.left = `${curX - offsetX}px`;
+            el.style.top = `${curY - offsetY}px`;
+          };
+
+          const onEnd = () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('touchmove', onMove);
+            window.removeEventListener('mouseup', onEnd);
+            window.removeEventListener('touchend', onEnd);
+
+            const boardRect = board.getBoundingClientRect();
+            const pieceRect = el.getBoundingClientRect();
+
+            const currentBoardX = pieceRect.left - boardRect.left;
+            const currentBoardY = pieceRect.top - boardRect.top;
+
+            // Toleransi tempel disesuaikan dengan ukuran kepingan
+            const tolerance = Math.max(12, Math.min(pieceWidth, pieceHeight) * 0.45);
+
+            if (
+              Math.abs(currentBoardX - piece.targetX) < tolerance &&
+              Math.abs(currentBoardY - piece.targetY) < tolerance
+            ) {
+              // Tempel di Board
+              board.appendChild(el);
+              el.style.position = 'absolute';
+              el.style.left = `${piece.targetX}px`;
+              el.style.top = `${piece.targetY}px`;
+              el.classList.add('placed');
+              piece.isPlaced = true;
+              placedCount++;
+
+              progressText.textContent = `${placedCount} / ${gridSize * gridSize} Terpasang`;
+
+              if (placedCount === gridSize * gridSize) {
+                setTimeout(() => {
+                  winOverlay.classList.remove('opacity-0', 'pointer-events-none');
+                }, 200);
+              }
+            } else {
+              // Kembalikan ke Tray jika lepas di luar target
+              const trayRect = tray.getBoundingClientRect();
+              let relativeTrayX = pieceRect.left - trayRect.left;
+              let relativeTrayY = pieceRect.top - trayRect.top;
+
+              relativeTrayX = Math.max(0, Math.min(relativeTrayX, trayRect.width - pieceRect.width));
+              relativeTrayY = Math.max(0, Math.min(relativeTrayY, trayRect.height - pieceRect.height));
+
+              tray.appendChild(el);
+              el.style.position = 'absolute';
+              el.style.left = `${relativeTrayX}px`;
+              el.style.top = `${relativeTrayY}px`;
+              el.style.zIndex = '10';
+            }
+          };
+
+          window.addEventListener('mousemove', onMove, { passive: false });
+          window.addEventListener('touchmove', onMove, { passive: false });
+          window.addEventListener('mouseup', onEnd);
+          window.addEventListener('touchend', onEnd);
+        };
+
+        el.addEventListener('mousedown', onStart);
+        el.addEventListener('touchstart', onStart, { passive: false });
+      }
+
+      btnRestart.addEventListener('click', () => {
+        initGame();
+      });
+    });
+  </script>
+</body>
+</html>
