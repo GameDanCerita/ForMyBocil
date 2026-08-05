@@ -1,0 +1,383 @@
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "tertiary-fixed-dim": "#80dd52", "on-error-container": "#93000a", "on-tertiary-fixed-variant": "#1d5200", "primary-fixed-dim": "#ffb0d0", "on-tertiary": "#ffffff", "secondary": "#68548d", "on-secondary-container": "#5d4a82", "secondary-fixed": "#ebdcff", "surface-tint": "#ac2471", "on-surface": "#24181d", "on-primary": "#ffffff", "on-primary-fixed-variant": "#8c0058", "surface": "#fff8f8", "tertiary": "#296c00", "surface-container-highest": "#f3dde3", "inverse-surface": "#3a2d32", "surface-container-lowest": "#ffffff", "surface-bright": "#fff8f8", "outline": "#897179", "on-primary-fixed": "#3d0024", "error": "#ba1a1a", "primary-fixed": "#ffd8e6", "on-tertiary-container": "#153f00", "on-secondary-fixed-variant": "#503d73", "on-error": "#ffffff", "primary": "#ac2471", "surface-variant": "#f3dde3", "secondary-container": "#d6beff", "on-tertiary-fixed": "#072100", "on-primary-container": "#6e0044", "surface-container": "#ffe8ef", "inverse-on-surface": "#ffecf1", "on-background": "#24181d", "inverse-primary": "#ffb0d0", "surface-container-high": "#f9e3e9", "secondary-fixed-dim": "#d3bcfc", "error-container": "#ffdad6", "surface-dim": "#ead5db", "on-secondary-fixed": "#230f45", "surface-container-low": "#fff0f3", "outline-variant": "#dcbfc9", "on-surface-variant": "#564149", "background": "#fff8f8", "primary-container": "#ff69b4", "on-secondary": "#ffffff", "tertiary-fixed": "#9bfa6b", "tertiary-container": "#5ab32c" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "xl": "32px", "xs": "4px", "container-margin": "20px", "md": "16px", "gutter": "16px", "lg": "24px", "unit": "4px", "sm": "8px" }, "fontFamily": { "body-lg": ["Quicksand"], "body-md": ["Quicksand"], "label-bold": ["Quicksand"], "headline-lg": ["Quicksand"], "headline-md": ["Quicksand"], "headline-lg-mobile": ["Quicksand"], "label-sm": ["Quicksand"] }, "fontSize": { "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "500" }], "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "500" }], "label-bold": ["14px", { "lineHeight": "1.0", "fontWeight": "700" }], "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "700" }], "headline-lg-mobile": ["26px", { "lineHeight": "1.2", "fontWeight": "700" }], "label-sm": ["12px", { "lineHeight": "1.0", "fontWeight": "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+    
+    .emoji-shower {
+        position: absolute;
+        top: -50px;
+        font-size: 24px;
+        animation: shower 2s linear infinite;
+        z-index: 100;
+        pointer-events: none;
+    }
+    
+    @keyframes shower {
+        0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
+  </style>
+</head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(255,105,180,0.08)]"><div class="h-16 px-container-margin flex items-center gap-md"><button class="w-10 h-10 flex items-center justify-center text-primary active:scale-90 transition-transform" onclick="history.back()"><span class="material-symbols-outlined">chevron_left</span></button><h1 class="font-headline-md text-headline-md text-on-surface">Game Detail</h1></div></header><main class="flex-1 relative w-full pt-16 bg-transparent pb-24"><div class="flex flex-col w-full h-full relative overflow-hidden bg-surface">
+<div class="px-container-margin py-lg flex flex-col gap-lg h-full">
+<!-- Controls Section -->
+<div class="flex flex-col gap-md bg-surface-container rounded-2xl p-md shadow-sm relative z-10 transition-transform">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-md text-headline-md text-on-surface">Pilih Foto</h2>
+<span class="material-symbols-outlined text-primary text-3xl">image</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Upload a photo to create your custom puzzle.</p>
+<label class="bg-gradient-to-b from-primary to-primary-container text-on-primary font-label-bold text-label-bold py-md px-lg rounded-xl text-center shadow-[0_8px_20px_rgba(255,105,180,0.12)] active:scale-95 transition-transform cursor-pointer relative overflow-hidden group" for="image-upload">
+<span class="relative z-10 flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-xl">upload_file</span>
+                Pilih Foto dari Galeri
+            </span>
+<div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+</label>
+<input accept="image/*" class="hidden" id="image-upload" type="file"/>
+<div class="flex justify-between items-center mt-sm">
+<span class="font-label-bold text-label-bold text-on-surface-variant">Grid Size:</span>
+<div class="flex gap-sm bg-surface-container-highest rounded-lg p-unit">
+<button class="px-sm py-unit rounded-md bg-primary-container text-on-primary-container font-label-bold text-label-sm active:scale-90 transition-transform shadow-sm" id="grid-3">3x3</button>
+<button class="px-sm py-unit rounded-md bg-transparent text-on-surface-variant font-label-bold text-label-sm active:scale-90 transition-transform" id="grid-4">4x4</button>
+</div>
+</div>
+</div>
+<!-- Game Area -->
+<div class="flex-1 flex flex-col items-center justify-center relative w-full aspect-square max-w-[400px] mx-auto">
+<!-- Preview overlay -->
+<div class="absolute inset-0 z-20 pointer-events-none rounded-2xl overflow-hidden hidden transition-opacity duration-300 shadow-lg border-4 border-primary-container" id="preview-container">
+<img alt="Preview" class="w-full h-full object-cover" id="preview-image" src=""/>
+<div class="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded-full text-xs font-bold backdrop-blur-sm">PREVIEW</div>
+</div>
+<!-- Puzzle Grid -->
+<div class="relative w-full aspect-square bg-surface-container-high rounded-2xl p-sm shadow-inner flex flex-wrap content-start" id="puzzle-grid">
+<!-- Tiles injected here -->
+<div class="w-full h-full flex flex-col items-center justify-center text-on-surface-variant gap-md bg-surface-container rounded-xl border-2 border-dashed border-outline-variant">
+<span class="material-symbols-outlined text-6xl text-primary/40 animate-pulse">extension</span>
+<p class="font-body-md text-body-md text-center max-w-[200px]">Upload an image to start playing!</p>
+</div>
+</div>
+<!-- Success State -->
+<div class="absolute inset-0 bg-surface/90 backdrop-blur-md z-30 rounded-2xl flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-500" id="success-overlay">
+<div class="bg-tertiary-container text-on-tertiary-container p-4 rounded-full mb-md animate-bounce shadow-lg">
+<span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">celebration</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg-mobile text-on-surface text-center mb-sm">Selesai! 🎉</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-center mb-lg">You solved the puzzle in <span class="font-bold text-primary" id="final-moves">0</span> moves.</p>
+<div class="flex gap-md">
+<button class="bg-primary text-on-primary font-label-bold text-label-bold py-sm px-lg rounded-full active:scale-95 transition-transform shadow-[0_4px_12px_rgba(255,105,180,0.2)] flex items-center gap-xs" id="btn-restart">
+<span class="material-symbols-outlined text-sm">replay</span> Main Lagi
+</button>
+</div>
+</div>
+</div>
+<!-- Utilities -->
+<div class="flex justify-between items-center mt-auto pb-md">
+<button class="flex items-center gap-sm px-md py-sm bg-secondary-container text-on-secondary-container rounded-full font-label-bold text-label-sm active:scale-95 transition-transform opacity-50 pointer-events-none shadow-sm" id="btn-preview">
+<span class="material-symbols-outlined text-lg">visibility</span>
+            Tahan Preview
+        </button>
+<div class="font-label-bold text-label-bold text-on-surface-variant flex items-center gap-xs bg-surface-container px-md py-sm rounded-full shadow-sm">
+<span class="material-symbols-outlined text-sm text-primary">swap_horiz</span>
+<span class="text-primary font-bold" id="move-count">0</span> Moves
+        </div>
+</div>
+</div>
+</div>
+<!-- Bottom Navigation Placeholder to match screen 3/4 -->
+ <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-low/90 backdrop-blur-xl shadow-[0_-4px_20px_rgba(172,36,113,0.08)]" data-active-classes="text-primary active-glow scale-110">
+    <div class="flex justify-around items-center h-16 px-md">
+      <a class="flex flex-col items-center justify-center gap-xs w-20 h-full text-on-surface-variant transition-all duration-300 transform active:scale-95" data-path="beranda" href="gamebocil.html">
+        <span class="material-symbols-outlined">home</span>
+        <span class="font-label-sm text-label-sm">Beranda</span>
+      </a>
+      <a aria-current="page" class="flex flex-col items-center justify-center gap-xs w-20 h-full transition-all duration-300 transform text-primary active-glow scale-110" data-path="game" href="game.html">
+        <span class="material-symbols-outlined">videogame_asset</span>
+        <span class="font-label-sm text-label-sm">Game</span>
+      </a>
+      <a class="flex flex-col items-center justify-center gap-xs w-20 h-full text-on-surface-variant transition-all duration-300 transform active:scale-95" data-path="cerita" href="cerita.html">
+        <span class="material-symbols-outlined">book_5</span>
+        <span class="font-label-sm text-label-sm">Cerita!</span>
+      </a>
+    </div>
+  </nav>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const uploadInput = document.getElementById('image-upload');
+        const gridContainer = document.getElementById('puzzle-grid');
+        const previewContainer = document.getElementById('preview-container');
+        const previewImage = document.getElementById('preview-image');
+        const btnPreview = document.getElementById('btn-preview');
+        const moveCountEl = document.getElementById('move-count');
+        const finalMovesEl = document.getElementById('final-moves');
+        const successOverlay = document.getElementById('success-overlay');
+        const btnRestart = document.getElementById('btn-restart');
+        
+        const btnGrid3 = document.getElementById('grid-3');
+        const btnGrid4 = document.getElementById('grid-4');
+
+        let gridSize = 3; // default 3x3
+        let currentImageSrc = null;
+        let tiles = [];
+        let moves = 0;
+        let emptyIndex = gridSize * gridSize - 1; // last slot is empty initially
+        let isShuffling = false;
+
+        // Grid selection
+        const setGridSize = (size) => {
+            if(isShuffling) return;
+            gridSize = size;
+            emptyIndex = gridSize * gridSize - 1;
+            
+            // UI update
+            if(size === 3) {
+                btnGrid3.className = 'px-sm py-unit rounded-md bg-primary-container text-on-primary-container font-label-bold text-label-sm active:scale-90 transition-transform shadow-sm';
+                btnGrid4.className = 'px-sm py-unit rounded-md bg-transparent text-on-surface-variant font-label-bold text-label-sm active:scale-90 transition-transform';
+            } else {
+                btnGrid4.className = 'px-sm py-unit rounded-md bg-primary-container text-on-primary-container font-label-bold text-label-sm active:scale-90 transition-transform shadow-sm';
+                btnGrid3.className = 'px-sm py-unit rounded-md bg-transparent text-on-surface-variant font-label-bold text-label-sm active:scale-90 transition-transform';
+            }
+            
+            if(currentImageSrc) initPuzzle(currentImageSrc);
+        };
+
+        btnGrid3.addEventListener('click', () => setGridSize(3));
+        btnGrid4.addEventListener('click', () => setGridSize(4));
+
+        // Image Upload
+        uploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    currentImageSrc = event.target.result;
+                    previewImage.src = currentImageSrc;
+                    initPuzzle(currentImageSrc);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        function createEmojiShower() {
+            const emojis = ['🎉', '✨', '💖', '🌟', '🧩', '🏆'];
+            for(let i=0; i<30; i++) {
+                setTimeout(() => {
+                    const el = document.createElement('div');
+                    el.className = 'emoji-shower';
+                    el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                    el.style.left = Math.random() * 100 + 'vw';
+                    el.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                    document.body.appendChild(el);
+                    setTimeout(() => el.remove(), 3000);
+                }, i * 100);
+            }
+        }
+
+        // Initialize Puzzle
+        function initPuzzle(imgSrc) {
+            gridContainer.innerHTML = '';
+            tiles = [];
+            moves = 0;
+            updateMoves();
+            successOverlay.classList.remove('opacity-100', 'pointer-events-auto');
+            successOverlay.classList.add('opacity-0', 'pointer-events-none');
+            
+            btnPreview.classList.remove('opacity-50', 'pointer-events-none');
+            
+            const totalTiles = gridSize * gridSize;
+            const tileSize = 100 / gridSize;
+            
+            // First show them in order
+            let currentOrder = Array.from({length: totalTiles}, (_, i) => i);
+            emptyIndex = totalTiles - 1;
+
+            for (let i = 0; i < totalTiles; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'absolute bg-surface rounded-lg shadow-sm transition-all duration-300 ease-in-out cursor-pointer hover:shadow-md active:scale-95 flex items-center justify-center overflow-hidden border border-outline-variant/30';
+                
+                // Style sizing - leave gap
+                tile.style.width = `calc(${tileSize}% - 6px)`;
+                tile.style.height = `calc(${tileSize}% - 6px)`;
+                
+                updateTilePosition(tile, i);
+
+                const correctRow = Math.floor(i / gridSize);
+                const correctCol = i % gridSize;
+
+                if (i !== totalTiles - 1) { // Not empty tile
+                    const innerImg = document.createElement('div');
+                    innerImg.className = 'w-full h-full bg-cover';
+                    innerImg.style.backgroundImage = `url(${imgSrc})`;
+                    innerImg.style.backgroundSize = `${gridSize * 100}% ${gridSize * 100}%`;
+                    innerImg.style.backgroundPosition = `${(correctCol / (gridSize - 1)) * 100}% ${(correctRow / (gridSize - 1)) * 100}%`;
+                    
+                    // Add subtle inner shadow for puzzle feel
+                    innerImg.style.boxShadow = 'inset 0 0 10px rgba(0,0,0,0.1)';
+
+                    tile.appendChild(innerImg);
+                    tile.dataset.correctId = i;
+                } else {
+                    tile.classList.add('opacity-0', 'pointer-events-none'); // Hidden empty slot
+                    tile.dataset.correctId = 'empty';
+                }
+
+                tile.dataset.currentIndex = i;
+                tile.addEventListener('click', () => handleTileClick(tile));
+                
+                tiles.push(tile);
+                gridContainer.appendChild(tile);
+            }
+            
+            // Trigger shuffle animation after brief delay
+            isShuffling = true;
+            setTimeout(() => shuffleTiles(), 800);
+        }
+        
+        function shuffleTiles() {
+            // Solvable shuffle (even inversions)
+            // For simple implementation, just random valid moves
+            let currentEmpty = gridSize * gridSize - 1;
+            let shuffleMoves = gridSize * 15; // More moves for larger grid
+            let lastMoved = -1;
+            
+            const doMove = (movesLeft) => {
+                if(movesLeft <= 0) {
+                    isShuffling = false;
+                    return;
+                }
+                
+                // Find valid neighbors
+                const row = Math.floor(currentEmpty / gridSize);
+                const col = currentEmpty % gridSize;
+                let neighbors = [];
+                
+                if(row > 0) neighbors.push(currentEmpty - gridSize); // Top
+                if(row < gridSize - 1) neighbors.push(currentEmpty + gridSize); // Bottom
+                if(col > 0) neighbors.push(currentEmpty - 1); // Left
+                if(col < gridSize - 1) neighbors.push(currentEmpty + 1); // Right
+                
+                // Filter out the tile we just moved to avoid immediate backtrack
+                neighbors = neighbors.filter(n => n !== lastMoved);
+                
+                const targetIdx = neighbors[Math.floor(Math.random() * neighbors.length)];
+                
+                const tileToMove = tiles.find(t => parseInt(t.dataset.currentIndex) === targetIdx);
+                const emptyTile = tiles.find(t => parseInt(t.dataset.currentIndex) === currentEmpty);
+                
+                tileToMove.dataset.currentIndex = currentEmpty;
+                emptyTile.dataset.currentIndex = targetIdx;
+                
+                updateTilePosition(tileToMove, currentEmpty);
+                updateTilePosition(emptyTile, targetIdx);
+                
+                lastMoved = currentEmpty;
+                currentEmpty = targetIdx;
+                emptyIndex = currentEmpty;
+                
+                setTimeout(() => doMove(movesLeft - 1), 50);
+            };
+            
+            doMove(shuffleMoves);
+        }
+
+        function updateTilePosition(tile, index) {
+            const row = Math.floor(index / gridSize);
+            const col = index % gridSize;
+            const tileSize = 100 / gridSize;
+            
+            // Add margin offset matching the gap calculation
+            tile.style.top = `calc(${row * tileSize}% + 3px)`;
+            tile.style.left = `calc(${col * tileSize}% + 3px)`;
+        }
+
+        function handleTileClick(tile) {
+            if(isShuffling) return;
+            
+            const currentIndex = parseInt(tile.dataset.currentIndex);
+            
+            // Check if adjacent to empty
+            if (isAdjacent(currentIndex, emptyIndex)) {
+                // Swap
+                const emptyTile = tiles.find(t => parseInt(t.dataset.currentIndex) === emptyIndex);
+                
+                // Update dataset
+                tile.dataset.currentIndex = emptyIndex;
+                emptyTile.dataset.currentIndex = currentIndex;
+                
+                // Update visuals
+                updateTilePosition(tile, emptyIndex);
+                updateTilePosition(emptyTile, currentIndex);
+                
+                // Update new empty index
+                emptyIndex = currentIndex;
+                
+                moves++;
+                updateMoves();
+                checkWin();
+            }
+        }
+
+        function isAdjacent(index1, index2) {
+            const r1 = Math.floor(index1 / gridSize);
+            const c1 = index1 % gridSize;
+            const r2 = Math.floor(index2 / gridSize);
+            const c2 = index2 % gridSize;
+            
+            return (Math.abs(r1 - r2) === 1 && c1 === c2) || (Math.abs(c1 - c2) === 1 && r1 === r2);
+        }
+
+        function checkWin() {
+            let isWin = true;
+            tiles.forEach(tile => {
+                const current = parseInt(tile.dataset.currentIndex);
+                const correct = tile.dataset.correctId === 'empty' ? gridSize*gridSize - 1 : parseInt(tile.dataset.correctId);
+                if (current !== correct) isWin = false;
+            });
+
+            if (isWin) {
+                finalMovesEl.textContent = moves;
+                setTimeout(() => {
+                    successOverlay.classList.remove('opacity-0', 'pointer-events-none');
+                    successOverlay.classList.add('opacity-100', 'pointer-events-auto');
+                    // Fill empty tile
+                    const emptyTile = tiles.find(t => t.dataset.correctId === 'empty');
+                    if(emptyTile) emptyTile.classList.remove('opacity-0');
+                    createEmojiShower();
+                }, 300);
+            }
+        }
+
+        function updateMoves() {
+            moveCountEl.textContent = moves;
+        }
+
+        // Preview interaction - updated for better mobile UX
+        const showPreview = (e) => { 
+            if(e) e.preventDefault(); 
+            if(currentImageSrc) previewContainer.classList.remove('hidden', 'opacity-0'); 
+        };
+        const hidePreview = () => { 
+            previewContainer.classList.add('opacity-0');
+            setTimeout(() => {
+                if(previewContainer.classList.contains('opacity-0')) {
+                    previewContainer.classList.add('hidden');
+                }
+            }, 300);
+        };
+
+        btnPreview.addEventListener('mousedown', showPreview);
+        btnPreview.addEventListener('mouseup', hidePreview);
+        btnPreview.addEventListener('mouseleave', hidePreview);
+        
+        btnPreview.addEventListener('touchstart', showPreview, {passive: false});
+        btnPreview.addEventListener('touchend', hidePreview);
+        btnPreview.addEventListener('touchcancel', hidePreview);
+
+        btnRestart.addEventListener('click', () => {
+             if(currentImageSrc) initPuzzle(currentImageSrc);
+        });
+
+    });
+</script></main></body></html>

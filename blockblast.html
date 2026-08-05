@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Kawaii Block Blast</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Material Symbols Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <!-- Google Fonts for Kawaii Style -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'surface-container-lowest': '#fff0f5',
+            'surface-container-low': '#ffe4e1',
+            'on-surface-variant': '#8b5cf6',
+            'primary': '#ff69b4',
+          },
+          fontFamily: {
+            sans: ['Fredoka', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Fredoka', sans-serif;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    
+    .grid-board {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: 6px;
+      background-color: #fce7f3;
+      padding: 8px;
+      border-radius: 20px;
+      box-shadow: inset 0 4px 10px rgba(0,0,0,0.05), 0 8px 25px rgba(255,105,180,0.15);
+    }
+
+    .cell {
+      background-color: #ffffff;
+      border-radius: 8px;
+      transition: background-color 0.1s ease, transform 0.1s ease;
+    }
+
+    /* Bayangan / Preview saat blok diposisikan */
+    .cell.preview {
+      background-color: rgba(255, 105, 180, 0.4) !important;
+      border: 2px dashed #ff69b4;
+      transform: scale(0.95);
+    }
+
+    .cell.clearing {
+      animation: popClear 0.3s ease-in-out forwards;
+    }
+
+    @keyframes popClear {
+      0% { transform: scale(1); filter: brightness(1.2); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+    /* Color Palette for Blocks */
+    .block-color-1 { background-color: #ff6b6b; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.15); } /* Soft Red */
+    .block-color-2 { background-color: #4ecdc4; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.15); } /* Cyan */
+    .block-color-3 { background-color: #ffe66d; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.15); } /* Yellow */
+    .block-color-4 { background-color: #a8e6cf; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.15); } /* Mint */
+    .block-color-5 { background-color: #ff8b94; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.15); } /* Coral */
+    .block-color-6 { background-color: #d4a5a5; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.15); } /* Pinkish Purple */
+    .block-color-7 { background-color: #9b59b6; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.15); } /* Purple */
+
+    .draggable-piece {
+      cursor: grab;
+      touch-action: none;
+      transition: transform 0.15s ease;
+    }
+    .draggable-piece:active {
+      cursor: grabbing;
+    }
+
+    .dragging-ghost {
+      position: fixed;
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.85;
+      transform: scale(1.05);
+      transition: none;
+    }
+  </style>
+</head>
+
+<body class="bg-pink-50 text-slate-700 min-h-screen flex flex-col items-center justify-between pb-28 select-none overflow-x-hidden">
+
+  <!-- Header Section -->
+  <header class="w-full max-w-md px-6 pt-6 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-pink-500 text-3xl">token</span>
+      <h1 class="text-2xl font-bold text-pink-500 tracking-wide">Kawaii Blocks</h1>
+    </div>
+
+    <!-- Score Boxes -->
+    <div class="flex gap-3">
+      <div class="bg-white px-4 py-1.5 rounded-2xl shadow-sm border border-pink-100 text-center">
+        <div class="text-[10px] uppercase font-bold text-pink-400">Score</div>
+        <div id="score" class="text-xl font-extrabold text-slate-800">0</div>
+      </div>
+      <div class="bg-white px-4 py-1.5 rounded-2xl shadow-sm border border-pink-100 text-center">
+        <div class="text-[10px] uppercase font-bold text-purple-400">Best</div>
+        <div id="high-score" class="text-xl font-extrabold text-purple-600">0</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Game Board -->
+  <main class="w-full max-w-md px-4 my-auto flex flex-col items-center">
+    <div id="board" class="grid-board w-full aspect-square max-w-[360px]"></div>
+  </main>
+
+  <!-- 3 Blocks Container (Tray) -->
+  <section class="w-full max-w-md px-4 flex justify-around items-center h-28 my-2">
+    <div id="piece-slot-0" class="w-24 h-24 flex items-center justify-center"></div>
+    <div id="piece-slot-1" class="w-24 h-24 flex items-center justify-center"></div>
+    <div id="piece-slot-2" class="w-24 h-24 flex items-center justify-center"></div>
+  </section>
+
+  <!-- Game Over Overlay -->
+  <div id="game-over-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-3xl p-6 text-center shadow-2xl max-w-xs w-full mx-4 border-4 border-pink-200">
+      <span class="material-symbols-outlined text-6xl text-pink-400 mb-2">sentiment_very_dissatisfied</span>
+      <h2 class="text-2xl font-bold text-slate-800 mb-1">Papan Penuh!</h2>
+      <p class="text-sm text-slate-500 mb-4">Tidak ada tempat lagi untuk meletakkan blok.</p>
+      
+      <div class="bg-pink-50 rounded-2xl p-3 mb-6">
+        <div class="text-xs text-pink-500 font-semibold">Skor Akhir</div>
+        <div id="final-score" class="text-3xl font-black text-pink-600">0</div>
+      </div>
+
+      <button id="btn-restart" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 rounded-2xl shadow-lg transition-transform active:scale-95">
+        Main Lagi
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-low/90 backdrop-blur-xl shadow-[0_-4px_20px_rgba(172,36,113,0.08)]">
+    <div class="flex justify-around items-center h-16 px-md">
+      <a class="flex flex-col items-center justify-center gap-xs w-20 h-full text-primary scale-110" href="gamebocil.html">
+        <span class="material-symbols-outlined">home</span>
+        <span class="text-xs">Beranda</span>
+      </a>
+      <a class="flex flex-col items-center justify-center gap-xs w-20 h-full text-on-surface-variant" href="game.html">
+        <span class="material-symbols-outlined">videogame_asset</span>
+        <span class="text-xs">Game</span>
+      </a>
+      <a class="flex flex-col items-center justify-center gap-xs w-20 h-full text-on-surface-variant" href="cerita.html">
+        <span class="material-symbols-outlined">book_5</span>
+        <span class="text-xs">Cerita!</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Core Game Script -->
+  <script>
+    // --- WEB AUDIO SYSTEM ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'pickup') {
+        // Suara Mengangkat Blok (Pop halus tinggi)
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+        
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.08);
+
+      } else if (type === 'place') {
+        // Suara Menaruh Blok (Thud / Drop mantap)
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(110, now + 0.1);
+
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.1);
+
+      } else if (type === 'clear') {
+        // Suara Blok Hancur (Arpeggio Nada Ceria)
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, index) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          const startTime = now + index * 0.06;
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, startTime);
+
+          gain.gain.setValueAtTime(0.3, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
+
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          osc.start(startTime);
+          osc.stop(startTime + 0.15);
+        });
+      }
+    }
+
+    // --- GAME LOGIC ---
+    const BOARD_SIZE = 8;
+    let boardState = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
+    let score = 0;
+    let highScore = localStorage.getItem('blockBlastBest') || 0;
+    let activePieces = [null, null, null];
+
+    const SHAPES = [
+      { shape: [[1]], color: 'block-color-1' },
+      { shape: [[1, 1]], color: 'block-color-2' },
+      { shape: [[1], [1]], color: 'block-color-2' },
+      { shape: [[1, 1, 1]], color: 'block-color-3' },
+      { shape: [[1], [1], [1]], color: 'block-color-3' },
+      { shape: [[1, 1], [1, 1]], color: 'block-color-4' },
+      { shape: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], color: 'block-color-5' },
+      { shape: [[1, 0], [1, 1]], color: 'block-color-6' },
+      { shape: [[0, 1], [1, 1]], color: 'block-color-6' },
+      { shape: [[1, 1, 1], [0, 1, 0]], color: 'block-color-7' }
+    ];
+
+    const boardEl = document.getElementById('board');
+    const scoreEl = document.getElementById('score');
+    const highScoreEl = document.getElementById('high-score');
+    const modalEl = document.getElementById('game-over-modal');
+
+    highScoreEl.innerText = highScore;
+
+    function initBoard() {
+      boardEl.innerHTML = '';
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+          boardEl.appendChild(cell);
+        }
+      }
+    }
+
+    function renderBoard() {
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+          const cell = boardEl.children[r * BOARD_SIZE + c];
+          cell.className = 'cell';
+          const colorClass = boardState[r][c];
+          if (colorClass) {
+            cell.classList.add(colorClass);
+          }
+        }
+      }
+    }
+
+    function spawnNewPieces() {
+      for (let i = 0; i < 3; i++) {
+        const randomObj = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+        activePieces[i] = randomObj;
+        renderPieceInSlot(i, randomObj);
+      }
+      checkGameOver();
+    }
+
+    function renderPieceInSlot(index, pieceData) {
+      const slot = document.getElementById(`piece-slot-${index}`);
+      slot.innerHTML = '';
+      if (!pieceData) return;
+
+      const pieceEl = document.createElement('div');
+      pieceEl.className = 'draggable-piece flex flex-col gap-1';
+      pieceEl.dataset.slotIndex = index;
+
+      const rows = pieceData.shape.length;
+      const cols = pieceData.shape[0].length;
+
+      for (let r = 0; r < rows; r++) {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'flex gap-1';
+        for (let c = 0; c < cols; c++) {
+          const block = document.createElement('div');
+          block.className = `w-5 h-5 rounded-md ${pieceData.shape[r][c] ? pieceData.color : 'bg-transparent'}`;
+          rowEl.appendChild(block);
+        }
+        pieceEl.appendChild(rowEl);
+      }
+
+      slot.appendChild(pieceEl);
+      attachDragEvents(pieceEl, pieceData, index);
+    }
+
+    function attachDragEvents(pieceEl, pieceData, slotIndex) {
+      let ghost = null;
+
+      const onStart = (e) => {
+        e.preventDefault();
+        playSound('pickup'); // Sound effect saat mengangkat blok
+        
+        const touch = e.touches ? e.touches[0] : e;
+        
+        ghost = pieceEl.cloneNode(true);
+        ghost.classList.add('dragging-ghost');
+        document.body.appendChild(ghost);
+
+        const updatePositionAndPreview = (clientX, clientY) => {
+          const ghostWidth = ghost.offsetWidth;
+          const ghostHeight = ghost.offsetHeight;
+          const ghostX = clientX - ghostWidth / 2;
+          const ghostY = clientY - ghostHeight - 20; 
+
+          ghost.style.left = `${ghostX}px`;
+          ghost.style.top = `${ghostY}px`;
+
+          highlightBoardHover(ghostX + ghostWidth / 2, ghostY + ghostHeight / 2, pieceData);
+        };
+
+        updatePositionAndPreview(touch.clientX, touch.clientY);
+
+        const onMove = (e) => {
+          const t = e.touches ? e.touches[0] : e;
+          updatePositionAndPreview(t.clientX, t.clientY);
+        };
+
+        const onEnd = (e) => {
+          const ghostWidth = ghost ? ghost.offsetWidth : 0;
+          const ghostHeight = ghost ? ghost.offsetHeight : 0;
+          const ghostX = (ghost ? parseFloat(ghost.style.left) : 0) + ghostWidth / 2;
+          const ghostY = (ghost ? parseFloat(ghost.style.top) : 0) + ghostHeight / 2;
+
+          clearHover();
+          const dropped = attemptDrop(ghostX, ghostY, pieceData);
+
+          if (dropped) {
+            playSound('place'); // Sound effect saat berhasil menaruh blok
+            activePieces[slotIndex] = null;
+            document.getElementById(`piece-slot-${slotIndex}`).innerHTML = '';
+            
+            if (activePieces.every(p => p === null)) {
+              spawnNewPieces();
+            } else {
+              checkGameOver();
+            }
+          }
+
+          if (ghost) ghost.remove();
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onEnd);
+          document.removeEventListener('touchmove', onMove);
+          document.removeEventListener('touchend', onEnd);
+        };
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onEnd);
+      };
+
+      pieceEl.addEventListener('mousedown', onStart);
+      pieceEl.addEventListener('touchstart', onStart, { passive: false });
+    }
+
+    function getTargetCell(x, y, shape) {
+      const rect = boardEl.getBoundingClientRect();
+      if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+        return null;
+      }
+
+      const cellSize = rect.width / BOARD_SIZE;
+      const rows = shape.length;
+      const cols = shape[0].length;
+
+      let col = Math.floor((x - rect.left) / cellSize) - Math.floor(cols / 2);
+      let row = Math.floor((y - rect.top) / cellSize) - Math.floor(rows / 2);
+
+      return { row, col };
+    }
+
+    function canPlace(row, col, shape) {
+      const rLen = shape.length;
+      const cLen = shape[0].length;
+
+      for (let r = 0; r < rLen; r++) {
+        for (let c = 0; c < cLen; c++) {
+          if (shape[r][c]) {
+            const targetR = row + r;
+            const targetC = col + c;
+            if (targetR < 0 || targetC < 0 || targetR >= BOARD_SIZE || targetC >= BOARD_SIZE) return false;
+            if (boardState[targetR][targetC] !== 0) return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function highlightBoardHover(x, y, pieceData) {
+      clearHover();
+      const pos = getTargetCell(x, y, pieceData.shape);
+      if (!pos) return;
+
+      if (canPlace(pos.row, pos.col, pieceData.shape)) {
+        for (let r = 0; r < pieceData.shape.length; r++) {
+          for (let c = 0; c < pieceData.shape[0].length; c++) {
+            if (pieceData.shape[r][c]) {
+              const cellIndex = (pos.row + r) * BOARD_SIZE + (pos.col + c);
+              if (boardEl.children[cellIndex]) {
+                boardEl.children[cellIndex].classList.add('preview');
+              }
+            }
+          }
+        }
+      }
+    }
+
+    function clearHover() {
+      Array.from(boardEl.children).forEach(cell => cell.classList.remove('preview'));
+    }
+
+    function attemptDrop(x, y, pieceData) {
+      const pos = getTargetCell(x, y, pieceData.shape);
+      if (!pos) return false;
+
+      if (canPlace(pos.row, pos.col, pieceData.shape)) {
+        let blockCount = 0;
+        for (let r = 0; r < pieceData.shape.length; r++) {
+          for (let c = 0; c < pieceData.shape[0].length; c++) {
+            if (pieceData.shape[r][c]) {
+              boardState[pos.row + r][pos.col + c] = pieceData.color;
+              blockCount++;
+            }
+          }
+        }
+        score += blockCount * 10;
+        updateScore();
+        renderBoard();
+        checkAndClearLines();
+        return true;
+      }
+      return false;
+    }
+
+    function checkAndClearLines() {
+      const rowsToClear = [];
+      const colsToClear = [];
+
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        if (boardState[r].every(val => val !== 0)) rowsToClear.push(r);
+      }
+
+      for (let c = 0; c < BOARD_SIZE; c++) {
+        let full = true;
+        for (let r = 0; r < BOARD_SIZE; r++) {
+          if (boardState[r][c] === 0) { full = false; break; }
+        }
+        if (full) colsToClear.push(c);
+      }
+
+      const totalLines = rowsToClear.length + colsToClear.length;
+      if (totalLines > 0) {
+        playSound('clear'); // Sound effect saat baris/kolom hancur
+        score += totalLines * 100 * totalLines;
+        updateScore();
+
+        rowsToClear.forEach(r => {
+          for (let c = 0; c < BOARD_SIZE; c++) boardState[r][c] = 0;
+        });
+        colsToClear.forEach(c => {
+          for (let r = 0; r < BOARD_SIZE; r++) boardState[r][c] = 0;
+        });
+
+        setTimeout(renderBoard, 150);
+      }
+    }
+
+    function updateScore() {
+      scoreEl.innerText = score;
+      if (score > highScore) {
+        highScore = score;
+        highScoreEl.innerText = highScore;
+        localStorage.setItem('blockBlastBest', highScore);
+      }
+    }
+
+    function checkGameOver() {
+      let canMoveAny = false;
+
+      for (let i = 0; i < 3; i++) {
+        const piece = activePieces[i];
+        if (!piece) continue;
+
+        for (let r = 0; r < BOARD_SIZE; r++) {
+          for (let c = 0; c < BOARD_SIZE; c++) {
+            if (canPlace(r, c, piece.shape)) {
+              canMoveAny = true;
+              break;
+            }
+          }
+          if (canMoveAny) break;
+        }
+        if (canMoveAny) break;
+      }
+
+      if (!canMoveAny && activePieces.some(p => p !== null)) {
+        document.getElementById('final-score').innerText = score;
+        modalEl.classList.remove('hidden');
+      }
+    }
+
+    document.getElementById('btn-restart').addEventListener('click', () => {
+      boardState = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
+      score = 0;
+      updateScore();
+      renderBoard();
+      modalEl.classList.add('hidden');
+      spawnNewPieces();
+    });
+
+    initBoard();
+    spawnNewPieces();
+  </script>
+</body>
+</html>

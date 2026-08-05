@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary-fixed-dim": "#80dd52",
+            "on-error-container": "#93000a",
+            "on-tertiary-fixed-variant": "#1d5200",
+            "primary-fixed-dim": "#ffb0d0",
+            "on-tertiary": "#ffffff",
+            "secondary": "#68548d",
+            "on-secondary-container": "#5d4a82",
+            "secondary-fixed": "#ebdcff",
+            "surface-tint": "#ac2471",
+            "on-surface": "#24181d",
+            "on-primary": "#ffffff",
+            "on-primary-fixed-variant": "#8c0058",
+            "surface": "#fff8f8",
+            "tertiary": "#296c00",
+            "surface-container-highest": "#f3dde3",
+            "inverse-surface": "#3a2d32",
+            "surface-container-lowest": "#ffffff",
+            "surface-bright": "#fff8f8",
+            "outline": "#897179",
+            "on-primary-fixed": "#3d0024",
+            "error": "#ba1a1a",
+            "primary-fixed": "#ffd8e6",
+            "on-tertiary-container": "#153f00",
+            "on-secondary-fixed-variant": "#503d73",
+            "on-error": "#ffffff",
+            "primary": "#ac2471",
+            "surface-variant": "#f3dde3",
+            "secondary-container": "#d6beff",
+            "on-tertiary-fixed": "#072100",
+            "on-primary-container": "#6e0044",
+            "surface-container": "#ffe8ef",
+            "inverse-on-surface": "#ffecf1",
+            "on-background": "#24181d",
+            "inverse-primary": "#ffb0d0",
+            "surface-container-high": "#f9e3e9",
+            "secondary-fixed-dim": "#d3bcfc",
+            "error-container": "#ffdad6",
+            "surface-dim": "#ead5db",
+            "on-secondary-fixed": "#230f45",
+            "surface-container-low": "#fff0f3",
+            "outline-variant": "#dcbfc9",
+            "on-surface-variant": "#564149",
+            "background": "#fff8f8",
+            "primary-container": "#ff69b4",
+            "on-secondary": "#ffffff",
+            "tertiary-fixed": "#9bfa6b",
+            "tertiary-container": "#5ab32c"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "xl": "32px",
+            "xs": "4px",
+            "container-margin": "20px",
+            "md": "16px",
+            "gutter": "16px",
+            "lg": "24px",
+            "unit": "4px",
+            "sm": "8px"
+          },
+          "fontFamily": {
+            "body-lg": ["Quicksand"],
+            "body-md": ["Quicksand"],
+            "label-bold": ["Quicksand"],
+            "headline-lg": ["Quicksand"],
+            "headline-md": ["Quicksand"],
+            "headline-lg-mobile": ["Quicksand"],
+            "label-sm": ["Quicksand"]
+          },
+          "fontSize": {
+            "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "500" }],
+            "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "500" }],
+            "label-bold": ["14px", { "lineHeight": "1.0", "fontWeight": "700" }],
+            "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "700" }],
+            "headline-lg-mobile": ["26px", { "lineHeight": "1.2", "fontWeight": "700" }],
+            "label-sm": ["12px", { "lineHeight": "1.0", "fontWeight": "600" }]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-40px) scale(1.5); opacity: 0; }
+    }
+    .float-anim {
+      animation: floatUp 1s ease-out forwards;
+    }
+    @keyframes explode {
+      0% { transform: scale(1) translate(0, 0); opacity: 1; }
+      100% { transform: scale(0.5) translate(var(--tx), var(--ty)); opacity: 0; }
+    }
+    .particle {
+      animation: explode 0.6s ease-out forwards;
+    }
+
+    /* Animasi Hujan Emoji Ringan (GPU Accelerated) */
+    @keyframes rainFall {
+      0% {
+        transform: translate3d(0, -10vh, 0) rotate(0deg);
+        opacity: 0;
+      }
+      10% { opacity: 0.35; }
+      90% { opacity: 0.35; }
+      100% {
+        transform: translate3d(0, 105vh, 0) rotate(180deg);
+        opacity: 0;
+      }
+    }
+    .rain-drop {
+      position: absolute;
+      top: 0;
+      will-change: transform;
+      pointer-events: none;
+      animation: rainFall linear forwards;
+    }
+
+    /* Animation Classes for Candy Movement */
+    .candy-item {
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
+      will-change: transform, opacity;
+    }
+    
+    .candy-pop {
+      animation: popOut 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes popOut {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+    .candy-bounce {
+      animation: bounceLand 0.3s cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
+    }
+
+    @keyframes bounceLand {
+      0% { transform: translateY(-10px); }
+      50% { transform: translateY(4px); }
+      100% { transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen relative overflow-hidden">
+
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" id="emoji-rain"></div>
+
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(255,105,180,0.08)]">
+  <div class="h-16 px-container-margin flex items-center gap-md">
+    <button class="w-10 h-10 flex items-center justify-center text-primary active:scale-90 transition-transform" onclick="history.back()">
+      <span class="material-symbols-outlined">chevron_left</span>
+    </button>
+    <h1 class="font-headline-md text-headline-md text-on-surface">Game Detail</h1>
+  </div>
+</header>
+
+<main class="flex-1 relative w-full pt-16 pb-24 bg-transparent z-10">
+  <div class="flex flex-col w-full px-container-margin pb-container-margin h-full overflow-hidden">
+    <div class="flex justify-between items-center py-md mt-sm bg-surface-container-highest rounded-2xl px-lg shadow-sm mb-lg relative overflow-hidden">
+      <div class="absolute -top-4 -left-4 w-16 h-16 bg-primary-fixed/30 rounded-full blur-xl"></div>
+      <div class="absolute -bottom-4 -right-4 w-16 h-16 bg-secondary-fixed/30 rounded-full blur-xl"></div>
+      <div class="flex flex-col relative z-10">
+        <span class="font-label-sm text-on-surface-variant uppercase tracking-wider">Score</span>
+        <span class="font-headline-lg text-primary" id="score-display">0</span>
+      </div>
+      <div class="flex flex-col items-center relative z-10">
+        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(255,105,180,0.15)] relative" id="timer-container">
+          <svg class="absolute w-full h-full -rotate-90" viewbox="0 0 36 36">
+            <circle class="stroke-surface-container-low" cx="18" cy="18" fill="none" r="16" stroke-width="4"></circle>
+            <circle class="stroke-tertiary transition-all duration-1000 ease-linear" cx="18" cy="18" fill="none" id="timer-ring" r="16" stroke-dasharray="100 100" stroke-dashoffset="0" stroke-width="4"></circle>
+          </svg>
+          <span class="font-headline-md text-on-surface z-10 transition-colors duration-300" id="time-display">60</span>
+        </div>
+      </div>
+      <div class="flex flex-col text-right relative z-10">
+        <span class="font-label-sm text-on-surface-variant uppercase tracking-wider">Best</span>
+        <span class="font-headline-md text-secondary" id="best-score-display">0</span>
+      </div>
+    </div>
+
+    <div class="flex-1 flex flex-col justify-center items-center relative">
+      <div class="grid grid-cols-8 grid-rows-8 gap-1 p-2 bg-surface-container-lowest rounded-2xl shadow-[0_8px_30px_rgba(255,105,180,0.1)] w-full max-w-[400px] aspect-square relative z-10 touch-none" id="game-board">
+      </div>
+      <div class="absolute top-[10%] left-[-5%] text-3xl opacity-50 animate-[bounce_4s_infinite] pointer-events-none">✨</div>
+      <div class="absolute bottom-[20%] right-[-5%] text-2xl opacity-40 animate-[bounce_5s_infinite_0.5s] pointer-events-none">✨</div>
+    </div>
+
+    <div class="mt-lg flex justify-center">
+      <button class="flex items-center gap-2 bg-surface-container px-lg py-sm rounded-full text-on-surface shadow-sm active:scale-95 transition-transform" id="pause-btn">
+        <span class="material-symbols-outlined text-primary">pause</span>
+        <span class="font-label-bold">Pause</span>
+      </button>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center p-container-margin opacity-0 transition-opacity duration-300" id="game-over-modal">
+      <div class="bg-surface w-full max-w-sm rounded-[32px] p-xl flex flex-col items-center text-center shadow-xl transform scale-95 transition-transform duration-300 origin-center relative overflow-hidden" id="modal-content">
+        <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(circle, #ffb0d0 2px, transparent 2px), radial-gradient(circle, #d6beff 2px, transparent 2px); background-size: 20px 20px, 30px 30px; background-position: 0 0, 15px 15px;"></div>
+        <div class="w-20 h-20 bg-primary-container rounded-full flex items-center justify-center mb-lg relative z-10">
+          <span class="text-4xl">🎉</span>
+        </div>
+        <h2 class="font-headline-lg text-on-surface mb-xs relative z-10">Time's Up!</h2>
+        <p class="font-body-md text-on-surface-variant mb-lg relative z-10">Sweet performance!</p>
+        <div class="bg-surface-container w-full rounded-2xl py-md mb-xl flex flex-col items-center relative z-10">
+          <span class="font-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Final Score</span>
+          <span class="font-headline-lg text-primary" id="final-score">0</span>
+          <div class="hidden mt-2 bg-tertiary text-on-tertiary font-label-bold text-[10px] px-2 py-1 rounded-full uppercase" id="new-best-badge">New Best!</div>
+        </div>
+        <button class="w-full bg-gradient-to-b from-primary to-[#8c0058] text-on-primary font-body-lg py-md rounded-xl shadow-[0_4px_14px_rgba(172,36,113,0.4)] active:scale-95 transition-transform relative z-10" id="restart-btn">
+          Main Lagi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // Emoji Rain (Versi Ringan & Hemat Performa)
+      const rainContainer = document.getElementById('emoji-rain');
+      const rainEmojis = ['🍬', '🍭', '🍫', '🍩', '🧁', '🍧'];
+      const MAX_DROPS = 12; 
+
+      function createRainDrop() {
+        if (rainContainer.childElementCount >= MAX_DROPS) return;
+
+        const drop = document.createElement('div');
+        drop.className = 'rain-drop text-xl';
+        
+        const leftPos = Math.floor(Math.random() * 95);
+        const duration = (Math.random() * 3 + 5).toFixed(1); 
+        
+        drop.style.left = `${leftPos}vw`;
+        drop.style.animationDuration = `${duration}s`;
+        drop.textContent = rainEmojis[Math.floor(Math.random() * rainEmojis.length)];
+
+        drop.addEventListener('animationend', () => {
+          drop.remove();
+        });
+
+        rainContainer.appendChild(drop);
+      }
+      setInterval(createRainDrop, 900);
+
+      const board = document.getElementById('game-board');
+      const scoreDisplay = document.getElementById('score-display');
+      const timeDisplay = document.getElementById('time-display');
+      const timerRing = document.getElementById('timer-ring');
+      const timerContainer = document.getElementById('timer-container');
+      const bestScoreDisplay = document.getElementById('best-score-display');
+      const gameOverModal = document.getElementById('game-over-modal');
+      const modalContent = document.getElementById('modal-content');
+      const finalScoreDisplay = document.getElementById('final-score');
+      const restartBtn = document.getElementById('restart-btn');
+      const newBestBadge = document.getElementById('new-best-badge');
+      
+      const width = 8;
+      const candyTypes = ['🍬', '🍭', '🍫', '🍩', '🧁', '🍧'];
+      let grid = [];
+      let score = 0;
+      let time = 60;
+      let timer = null;
+      let bestScore = localStorage.getItem('sugarCandyBest') || 0;
+      
+      let draggedCandy = null;
+      let replacedCandy = null;
+      let isAnimating = false;
+      
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        if(type === 'pop') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+          gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.1);
+        } else if (type === 'win') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+          osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+          osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2);
+          gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.5);
+        }
+      }
+
+      bestScoreDisplay.textContent = bestScore;
+
+      function initGame() {
+        board.innerHTML = '';
+        grid = [];
+        score = 0;
+        time = 60;
+        isAnimating = false;
+        scoreDisplay.textContent = score;
+        updateTimerDisplay();
+        
+        gameOverModal.classList.add('hidden');
+        gameOverModal.classList.remove('flex');
+        setTimeout(() => {
+          gameOverModal.classList.add('opacity-0');
+          modalContent.classList.add('scale-95');
+          modalContent.classList.remove('scale-100');
+        }, 10);
+
+        for (let i = 0; i < width * width; i++) {
+          const square = document.createElement('div');
+          square.setAttribute('draggable', true);
+          square.setAttribute('id', i);
+          let randomColor = Math.floor(Math.random() * candyTypes.length);
+          
+          while(
+            (i >= 2 && grid[i-1] === candyTypes[randomColor] && grid[i-2] === candyTypes[randomColor]) ||
+            (i >= width*2 && grid[i-width] === candyTypes[randomColor] && grid[i-width*2] === candyTypes[randomColor])
+          ) {
+            randomColor = Math.floor(Math.random() * candyTypes.length);
+          }
+          
+          square.innerHTML = candyTypes[randomColor];
+          grid.push(candyTypes[randomColor]);
+          
+          square.className = 'candy-item relative w-full h-full flex items-center justify-center text-3xl cursor-pointer select-none bg-white rounded-lg shadow-sm touch-none drop-shadow-md hover:scale-105';
+          
+          square.addEventListener('dragstart', dragStart);
+          square.addEventListener('dragover', dragOver);
+          square.addEventListener('dragenter', dragEnter);
+          square.addEventListener('dragleave', dragLeave);
+          square.addEventListener('drop', dragDrop);
+          square.addEventListener('dragend', dragEnd);
+          
+          square.addEventListener('touchstart', handleTouchStart, {passive: false});
+          square.addEventListener('touchmove', handleTouchMove, {passive: false});
+          square.addEventListener('touchend', handleTouchEnd);
+          
+          board.appendChild(square);
+        }
+        
+        clearInterval(timer);
+        timer = setInterval(tick, 1000);
+      }
+      
+      // Touch handling
+      let touchStartX, touchStartY;
+      let touchElement;
+      
+      function handleTouchStart(e) {
+        if(isAnimating) return;
+        e.preventDefault();
+        touchElement = e.target.closest('div[id]');
+        if(!touchElement) return;
+        draggedCandy = touchElement;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchElement.classList.add('scale-110', 'z-20', 'shadow-md');
+      }
+      
+      function handleTouchMove(e) {
+        if(isAnimating || !touchElement) return;
+        e.preventDefault();
+      }
+      
+      function handleTouchEnd(e) {
+        if(isAnimating || !touchElement) return;
+        e.preventDefault();
+        
+        touchElement.classList.remove('scale-110', 'z-20', 'shadow-md');
+        
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        
+        const dx = touchEndX - touchStartX;
+        const dy = touchEndY - touchStartY;
+        
+        if(Math.abs(dx) < 20 && Math.abs(dy) < 20) {
+          touchElement = null;
+          return;
+        }
+        
+        const draggedId = parseInt(touchElement.id);
+        let targetId;
+        
+        if(Math.abs(dx) > Math.abs(dy)) {
+          if(dx > 0 && draggedId % width < width - 1) targetId = draggedId + 1;
+          else if(dx < 0 && draggedId % width > 0) targetId = draggedId - 1;
+        } else {
+          if(dy > 0 && draggedId < width * width - width) targetId = draggedId + width;
+          else if(dy < 0 && draggedId >= width) targetId = draggedId - width;
+        }
+        
+        if(targetId !== undefined) {
+          replacedCandy = document.getElementById(targetId);
+          processSwapWithAnimation();
+        }
+        
+        touchElement = null;
+      }
+
+      function dragStart(e) {
+        if(isAnimating) {
+          e.preventDefault();
+          return;
+        }
+        draggedCandy = this;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+        this.classList.add('opacity-50');
+      }
+
+      function dragOver(e) { e.preventDefault(); }
+      function dragEnter(e) { e.preventDefault(); }
+      function dragLeave(e) { }
+      
+      function dragDrop(e) {
+        replacedCandy = this;
+      }
+
+      function dragEnd() {
+        this.classList.remove('opacity-50');
+        if(isAnimating || !replacedCandy) return;
+        
+        const validMoves = [
+          parseInt(draggedCandy.id) - 1,
+          parseInt(draggedCandy.id) - width,
+          parseInt(draggedCandy.id) + 1,
+          parseInt(draggedCandy.id) + width
+        ];
+        
+        let validMove = validMoves.includes(parseInt(replacedCandy.id));
+        const isLeftEdge = parseInt(draggedCandy.id) % width === 0;
+        const isRightEdge = parseInt(draggedCandy.id) % width === width - 1;
+        
+        if (isLeftEdge && parseInt(replacedCandy.id) === parseInt(draggedCandy.id) - 1) validMove = false;
+        if (isRightEdge && parseInt(replacedCandy.id) === parseInt(draggedCandy.id) + 1) validMove = false;
+
+        if (replacedCandy.id && validMove) {
+          processSwapWithAnimation();
+        }
+      }
+
+      function processSwapWithAnimation() {
+        isAnimating = true;
+        const draggedId = parseInt(draggedCandy.id);
+        const replacedId = parseInt(replacedCandy.id);
+
+        const dx = (replacedId % width) - (draggedId % width);
+        const dy = Math.floor(replacedId / width) - Math.floor(draggedId / width);
+
+        draggedCandy.style.transform = `translate(${dx * 100}%, ${dy * 100}%)`;
+        replacedCandy.style.transform = `translate(${-dx * 100}%, ${-dy * 100}%)`;
+
+        setTimeout(() => {
+          draggedCandy.style.transition = 'none';
+          replacedCandy.style.transition = 'none';
+          draggedCandy.style.transform = '';
+          replacedCandy.style.transform = '';
+
+          let temp = grid[draggedId];
+          grid[draggedId] = grid[replacedId];
+          grid[replacedId] = temp;
+
+          draggedCandy.innerHTML = grid[draggedId];
+          replacedCandy.innerHTML = grid[replacedId];
+
+          draggedCandy.offsetHeight;
+          draggedCandy.style.transition = '';
+          replacedCandy.style.transition = '';
+
+          const hasMatches = checkMatchesAndClear();
+
+          if (!hasMatches) {
+            draggedCandy.style.transform = `translate(${dx * 100}%, ${dy * 100}%)`;
+            replacedCandy.style.transform = `translate(${-dx * 100}%, ${-dy * 100}%)`;
+
+            setTimeout(() => {
+              draggedCandy.style.transition = 'none';
+              replacedCandy.style.transition = 'none';
+              draggedCandy.style.transform = '';
+              replacedCandy.style.transform = '';
+
+              let tempRev = grid[draggedId];
+              grid[draggedId] = grid[replacedId];
+              grid[replacedId] = tempRev;
+
+              draggedCandy.innerHTML = grid[draggedId];
+              replacedCandy.innerHTML = grid[replacedId];
+
+              draggedCandy.offsetHeight;
+              draggedCandy.style.transition = '';
+              replacedCandy.style.transition = '';
+
+              isAnimating = false;
+            }, 200);
+          } else {
+            playSound('pop');
+            setTimeout(() => {
+              moveDownWithAnimation();
+            }, 250);
+          }
+        }, 250);
+      }
+
+      function checkMatchesAndClear() {
+        let matchedIndices = new Set();
+
+        for (let r = 0; r < width; r++) {
+          for (let c = 0; c < width - 2; c++) {
+            let i = r * width + c;
+            let type = grid[i];
+            if (type && type === grid[i + 1] && type === grid[i + 2]) {
+              matchedIndices.add(i);
+              matchedIndices.add(i + 1);
+              matchedIndices.add(i + 2);
+            }
+          }
+        }
+
+        for (let c = 0; c < width; c++) {
+          for (let r = 0; r < width - 2; r++) {
+            let i = r * width + c;
+            let type = grid[i];
+            if (type && type === grid[i + width] && type === grid[i + width * 2]) {
+              matchedIndices.add(i);
+              matchedIndices.add(i + width);
+              matchedIndices.add(i + width * 2);
+            }
+          }
+        }
+
+        if (matchedIndices.size > 0) {
+          score += matchedIndices.size * 10;
+          scoreDisplay.textContent = score;
+
+          matchedIndices.forEach(idx => {
+            const el = document.getElementById(idx);
+            createExplosion(el, grid[idx]);
+            el.classList.add('candy-pop');
+            grid[idx] = '';
+          });
+
+          addTime(3);
+          const firstMatched = document.getElementById(Array.from(matchedIndices)[0]);
+          showFloatingText(firstMatched, `+${matchedIndices.size * 10}`);
+
+          return true;
+        }
+
+        return false;
+      }
+
+      function moveDownWithAnimation() {
+        let moved = false;
+        let dropDistances = new Array(width * width).fill(0);
+
+        for (let col = 0; col < width; col++) {
+          let emptySpaces = 0;
+
+          for (let row = width - 1; row >= 0; row--) {
+            let index = row * width + col;
+            if (grid[index] === '') {
+              emptySpaces++;
+            } else if (emptySpaces > 0) {
+              let targetIndex = (row + emptySpaces) * width + col;
+              grid[targetIndex] = grid[index];
+              grid[index] = '';
+
+              dropDistances[targetIndex] = emptySpaces;
+              moved = true;
+            }
+          }
+
+          for (let topRow = 0; topRow < emptySpaces; topRow++) {
+            let targetIndex = topRow * width + col;
+            let randomColor = candyTypes[Math.floor(Math.random() * candyTypes.length)];
+            grid[targetIndex] = randomColor;
+
+            dropDistances[targetIndex] = emptySpaces;
+            moved = true;
+          }
+        }
+
+        for (let i = 0; i < width * width; i++) {
+          const el = document.getElementById(i);
+          el.classList.remove('candy-pop');
+          
+          if (dropDistances[i] > 0) {
+            el.style.transition = 'none';
+            el.style.transform = `translateY(-${dropDistances[i] * 100}%)`;
+            el.innerHTML = grid[i];
+
+            el.offsetHeight;
+
+            el.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.25, 0.64, 1)';
+            el.style.transform = 'translateY(0)';
+          } else {
+            el.innerHTML = grid[i];
+          }
+        }
+
+        setTimeout(() => {
+          for (let i = 0; i < width * width; i++) {
+            if (dropDistances[i] > 0) {
+              const el = document.getElementById(i);
+              el.classList.add('candy-bounce');
+              setTimeout(() => el.classList.remove('candy-bounce'), 300);
+            }
+          }
+
+          if (checkMatchesAndClear()) {
+            playSound('pop');
+            setTimeout(() => {
+              moveDownWithAnimation();
+            }, 300);
+          } else {
+            isAnimating = false;
+          }
+        }, 320);
+      }
+
+      function showFloatingText(element, text) {
+        if(!element) return;
+        const rect = element.getBoundingClientRect();
+        const floatingEl = document.createElement('div');
+        floatingEl.textContent = text;
+        floatingEl.className = 'fixed font-label-bold text-tertiary text-lg z-50 float-anim pointer-events-none drop-shadow-md';
+        floatingEl.style.left = `${rect.left + rect.width / 2 - 15}px`;
+        floatingEl.style.top = `${rect.top}px`;
+        document.body.appendChild(floatingEl);
+        
+        setTimeout(() => { floatingEl.remove(); }, 1000);
+      }
+      
+      function createExplosion(element, emoji) {
+        const rect = element.getBoundingClientRect();
+        for(let j=0; j<3; j++) {
+          const particle = document.createElement('div');
+          particle.innerHTML = emoji;
+          particle.className = 'fixed text-xl z-40 particle pointer-events-none';
+          particle.style.left = `${rect.left + rect.width/4}px`;
+          particle.style.top = `${rect.top + rect.height/4}px`;
+          
+          const tx = (Math.random() - 0.5) * 100 + 'px';
+          const ty = (Math.random() - 0.5) * 100 + 'px';
+          particle.style.setProperty('--tx', tx);
+          particle.style.setProperty('--ty', ty);
+          
+          document.body.appendChild(particle);
+          setTimeout(() => particle.remove(), 600);
+        }
+      }
+
+      function addTime(seconds) {
+        time = Math.min(60, time + seconds);
+        updateTimerDisplay();
+        
+        timeDisplay.classList.add('text-tertiary', 'scale-125');
+        setTimeout(() => {
+          timeDisplay.classList.remove('text-tertiary', 'scale-125');
+        }, 300);
+      }
+
+      function tick() {
+        if (time > 0) {
+          time--;
+          updateTimerDisplay();
+        } else {
+          endGame();
+        }
+      }
+      
+      function updateTimerDisplay() {
+        timeDisplay.textContent = time;
+        const pct = (time / 60) * 100;
+        timerRing.style.strokeDashoffset = 100 - pct;
+        
+        if(time <= 10) {
+          timerRing.classList.remove('stroke-tertiary');
+          timerRing.classList.add('stroke-error');
+          timeDisplay.classList.add('text-error', 'animate-bounce', 'font-headline-lg');
+          timerContainer.classList.add('shadow-[0_0_15px_rgba(186,26,26,0.5)]');
+        } else {
+          timerRing.classList.add('stroke-tertiary');
+          timerRing.classList.remove('stroke-error');
+          timeDisplay.classList.remove('text-error', 'animate-bounce', 'font-headline-lg');
+          timerContainer.classList.remove('shadow-[0_0_15px_rgba(186,26,26,0.5)]');
+        }
+      }
+
+      function endGame() {
+        clearInterval(timer);
+        playSound('win');
+        
+        finalScoreDisplay.textContent = score;
+        
+        if (score > bestScore) {
+          bestScore = score;
+          localStorage.setItem('sugarCandyBest', bestScore);
+          bestScoreDisplay.textContent = bestScore;
+          newBestBadge.classList.remove('hidden');
+        } else {
+          newBestBadge.classList.add('hidden');
+        }
+        
+        gameOverModal.classList.remove('hidden');
+        gameOverModal.classList.add('flex');
+        
+        setTimeout(() => {
+          gameOverModal.classList.remove('opacity-0');
+          modalContent.classList.remove('scale-95');
+          modalContent.classList.add('scale-100');
+        }, 10);
+      }
+
+      restartBtn.addEventListener('click', initGame);
+      
+      document.getElementById('pause-btn').addEventListener('click', () => {
+        if(time <= 0) return;
+        
+        if(timer) {
+          clearInterval(timer);
+          timer = null;
+          document.getElementById('pause-btn').innerHTML = '<span class="material-symbols-outlined text-tertiary">play_arrow</span><span class="font-label-bold">Resume</span>';
+          board.classList.add('opacity-50', 'pointer-events-none');
+        } else {
+          timer = setInterval(tick, 1000);
+          document.getElementById('pause-btn').innerHTML = '<span class="material-symbols-outlined text-primary">pause</span><span class="font-label-bold">Pause</span>';
+          board.classList.remove('opacity-50', 'pointer-events-none');
+        }
+      });
+
+      initGame();
+    })();
+  </script>
+</main>
+
+ <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-low/90 backdrop-blur-xl shadow-[0_-4px_20px_rgba(172,36,113,0.08)]" data-active-classes="text-primary active-glow scale-110">
+    <div class="flex justify-around items-center h-16 px-md">
+      <a class="flex flex-col items-center justify-center gap-xs w-20 h-full text-on-surface-variant transition-all duration-300 transform active:scale-95" data-path="beranda" href="gamebocil.html">
+        <span class="material-symbols-outlined">home</span>
+        <span class="font-label-sm text-label-sm">Beranda</span>
+      </a>
+      <a aria-current="page" class="flex flex-col items-center justify-center gap-xs w-20 h-full transition-all duration-300 transform text-primary active-glow scale-110" data-path="game" href="game.html">
+        <span class="material-symbols-outlined">videogame_asset</span>
+        <span class="font-label-sm text-label-sm">Game</span>
+      </a>
+      <a class="flex flex-col items-center justify-center gap-xs w-20 h-full text-on-surface-variant transition-all duration-300 transform active:scale-95" data-path="cerita" href="cerita.html">
+        <span class="material-symbols-outlined">book_5</span>
+        <span class="font-label-sm text-label-sm">Cerita!</span>
+      </a>
+    </div>
+  </nav>
+</body>
+</html>
