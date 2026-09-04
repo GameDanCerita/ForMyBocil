@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+    <title>Chat Lucu Firebase</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ac2471",
+                        "primary-container": "#ff69b4",
+                        "primary-fixed-dim": "#ffb0d0",
+                        "primary-fixed": "#ffd8e6",
+                        "surface": "#fff8f8",
+                        "surface-container": "#ffe8ef",
+                        "surface-container-low": "#fff0f3",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#24181d",
+                        "on-surface-variant": "#564149",
+                        "on-primary": "#ffffff"
+                    },
+                    fontFamily: {
+                        "quicksand": ["Quicksand", "sans-serif"]
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            overscroll-behavior: none;
+            font-family: 'Quicksand', sans-serif;
+        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+        .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+
+        .emoji-rain {
+            position: fixed;
+            top: -50px;
+            user-select: none;
+            pointer-events: none;
+            z-index: 0;
+            animation: fall linear forwards;
+            opacity: 0.5;
+        }
+        @keyframes fall {
+            to { transform: translateY(110vh) rotate(360deg); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #ffb0d0;
+            border-radius: 10px;
+        }
+
+        .swipe-reply {
+            transition: transform 0.15s ease-out;
+            touch-action: pan-y;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex flex-col min-h-screen relative overflow-hidden">
+
+    <!-- Input File Tersembunyi (Kamera Khusus dengan atribut capture) -->
+    <input type="file" id="profile-upload-input" accept="image/*" class="hidden"/>
+    <input type="file" id="image-gallery-input" accept="image/*" class="hidden"/>
+    <input type="file" id="image-camera-input" accept="image/*" capture="environment" class="hidden"/>
+
+    <!-- Efek Hujan Emoji & Background Blobs -->
+    <div class="fixed inset-0 pointer-events-none z-0" id="emoji-container"></div>
+    <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute -top-10 -left-10 w-44 h-44 bg-primary-fixed-dim/30 rounded-full blur-2xl animate-float"></div>
+        <div class="absolute -bottom-10 -right-10 w-52 h-52 bg-primary-fixed/40 rounded-full blur-2xl animate-float" style="animation-delay: -2s;"></div>
+    </div>
+
+    <!-- MODAL REGISTRASI AUTOMATIS TELEPON -->
+    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-surface-container-lowest p-6 rounded-[2rem] shadow-xl border border-primary-fixed/50 flex flex-col gap-4 text-center">
+            <div class="w-16 h-16 bg-primary-fixed rounded-full flex items-center justify-center mx-auto text-primary">
+                <span class="material-symbols-outlined text-3xl">phone_iphone</span>
+            </div>
+            <div>
+                <h3 class="font-bold text-lg text-primary">Registrasi Nomor HP</h3>
+                <p class="text-xs text-on-surface-variant">Daftarkan nomor Anda agar bisa mulai chatting ✨</p>
+            </div>
+            <form id="auth-form" class="flex flex-col gap-3">
+                <input type="text" id="reg-name" placeholder="Nama Lengkap / Panggilan" required 
+                       class="w-full px-4 py-2.5 text-xs bg-surface border border-primary-fixed rounded-xl outline-none focus:ring-2 focus:ring-primary-container"/>
+                <input type="tel" id="reg-phone" placeholder="Nomor Telepon (cth: 08123456789)" required 
+                       class="w-full px-4 py-2.5 text-xs bg-surface border border-primary-fixed rounded-xl outline-none focus:ring-2 focus:ring-primary-container"/>
+                <button type="submit" id="btn-submit-auth" class="bg-primary hover:bg-primary-container text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition-all active:scale-95 flex items-center justify-center gap-1">
+                    <span>Mulai Chatting</span>
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH KONTAK -->
+    <div id="add-contact-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-surface-container-lowest p-6 rounded-[2rem] shadow-xl border border-primary-fixed/50 flex flex-col gap-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-sm text-primary">Tambah Kontak Baru</h3>
+                <button id="close-add-modal" class="text-on-surface-variant text-xs font-bold">✕</button>
+            </div>
+            <form id="add-contact-form" class="flex flex-col gap-3">
+                <input type="tel" id="contact-phone" placeholder="Masukkan Nomor HP Teman..." required 
+                       class="w-full px-4 py-2.5 text-xs bg-surface border border-primary-fixed rounded-xl outline-none focus:ring-2 focus:ring-primary-container"/>
+                <button type="submit" id="btn-submit-contact" class="bg-primary hover:bg-primary-container text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition-all active:scale-95">
+                    Cari & Tambahkan
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT NAMA KONTAK -->
+    <div id="edit-contact-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-surface-container-lowest p-6 rounded-[2rem] shadow-xl border border-primary-fixed/50 flex flex-col gap-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-sm text-primary">Ubah Nama Kontak</h3>
+                <button id="close-edit-contact-modal" class="text-on-surface-variant text-xs font-bold">✕</button>
+            </div>
+            <form id="edit-contact-form" class="flex flex-col gap-3">
+                <input type="text" id="edit-contact-name-input" placeholder="Nama Baru Kontak..." required 
+                       class="w-full px-4 py-2.5 text-xs bg-surface border border-primary-fixed rounded-xl outline-none focus:ring-2 focus:ring-primary-container"/>
+                <button type="submit" id="btn-save-contact-name" class="bg-primary hover:bg-primary-container text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition-all active:scale-95">
+                    Simpan Perubahan
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL BUAT GRUP -->
+    <div id="create-group-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-surface-container-lowest p-6 rounded-[2rem] shadow-xl border border-primary-fixed/50 flex flex-col gap-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-sm text-primary">Buat Grup Chat Baru</h3>
+                <button id="close-group-modal" class="text-on-surface-variant text-xs font-bold">✕</button>
+            </div>
+            <form id="create-group-form" class="flex flex-col gap-3">
+                <input type="text" id="group-name-input" placeholder="Nama Grup..." required 
+                       class="w-full px-4 py-2.5 text-xs bg-surface border border-primary-fixed rounded-xl outline-none focus:ring-2 focus:ring-primary-container"/>
+                <textarea id="group-desc-input" placeholder="Deskripsi Grup (Opsional)..." 
+                          class="w-full px-4 py-2 text-xs bg-surface border border-primary-fixed rounded-xl outline-none focus:ring-2 focus:ring-primary-container resize-none h-16"></textarea>
+                
+                <p class="text-[11px] font-bold text-primary mt-1">Pilih Anggota (Pilih min. 1 teman):</p>
+                <div id="group-contact-selector" class="max-h-36 overflow-y-auto custom-scrollbar flex flex-col gap-2 border border-primary-fixed/30 p-2 rounded-xl bg-surface/50"></div>
+
+                <button type="submit" id="btn-submit-group" class="bg-primary hover:bg-primary-container text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition-all active:scale-95">
+                    Buat Grup ✨
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL PILIH SUMBER FOTO -->
+    <div id="photo-source-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+        <div class="w-full max-w-xs bg-surface-container-lowest p-5 rounded-[2rem] shadow-xl border border-primary-fixed/50 flex flex-col gap-3 text-center">
+            <h3 class="font-bold text-sm text-primary">Kirim Foto</h3>
+            <p class="text-[11px] text-on-surface-variant">Pilih opsi pengambilan foto:</p>
+            <div class="grid grid-cols-2 gap-3 my-2">
+                <button id="btn-choose-camera" class="flex flex-col items-center justify-center gap-2 p-3 rounded-2xl bg-surface border border-primary-fixed/60 hover:bg-primary-fixed/20 transition-colors">
+                    <span class="material-symbols-outlined text-3xl text-primary">photo_camera</span>
+                    <span class="text-xs font-bold text-primary">Kamera Langsung</span>
+                </button>
+                <button id="btn-choose-gallery" class="flex flex-col items-center justify-center gap-2 p-3 rounded-2xl bg-surface border border-primary-fixed/60 hover:bg-primary-fixed/20 transition-colors">
+                    <span class="material-symbols-outlined text-3xl text-primary">collections</span>
+                    <span class="text-xs font-bold text-primary">Galeri File</span>
+                </button>
+            </div>
+            <button id="close-photo-source-modal" class="w-full py-2 bg-surface border border-primary-fixed/50 text-on-surface-variant rounded-xl text-xs font-bold">Batal</button>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL & EDIT PROFIL GRUP -->
+    <div id="group-info-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-surface-container-lowest p-5 rounded-[2rem] shadow-xl border border-primary-fixed/50 flex flex-col gap-3 max-h-[85vh] overflow-hidden">
+            <div class="flex justify-between items-center border-b border-primary-fixed/30 pb-2">
+                <h3 class="font-bold text-sm text-primary">Informasi Grup</h3>
+                <button id="close-group-info-modal" class="text-on-surface-variant text-xs font-bold">✕</button>
+            </div>
+            
+            <div class="overflow-y-auto custom-scrollbar flex flex-col gap-3 pr-1">
+                <div id="group-edit-section" class="hidden flex-col gap-2 bg-surface/60 p-3 rounded-xl border border-primary-fixed/30">
+                    <p class="text-[11px] font-bold text-primary">Pengaturan Grup (Khusus Admin):</p>
+                    <input type="text" id="edit-group-name" placeholder="Nama Grup..." class="w-full px-3 py-1.5 text-xs bg-surface border border-primary-fixed rounded-xl outline-none"/>
+                    <textarea id="edit-group-desc" placeholder="Deskripsi Grup..." class="w-full px-3 py-1.5 text-xs bg-surface border border-primary-fixed rounded-xl outline-none resize-none h-12"></textarea>
+                    <button id="btn-save-group-settings" class="bg-primary text-white text-[11px] font-bold py-1.5 rounded-xl shadow-sm">Simpan Perubahan</button>
+                </div>
+
+                <div id="group-readonly-section" class="flex flex-col gap-1">
+                    <h4 id="info-group-title" class="font-bold text-base text-primary"></h4>
+                    <p id="info-group-desc" class="text-xs text-on-surface-variant italic"></p>
+                </div>
+
+                <button id="open-add-member-modal-btn" class="w-full py-2 bg-primary-fixed hover:bg-primary-fixed-dim text-primary rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-sm border border-primary-fixed-dim">
+                    <span class="material-symbols-outlined text-base">person_add</span>
+                    <span>Tambah Anggota Baru</span>
+                </button>
+
+                <div class="flex flex-col gap-1.5">
+                    <p class="text-[11px] font-bold text-primary">Anggota Grup:</p>
+                    <div id="group-members-list" class="flex flex-col gap-1.5"></div>
+                </div>
+
+                <button id="btn-leave-group" class="mt-2 w-full py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-md">
+                    <span class="material-symbols-outlined text-sm">logout</span>
+                    <span>Keluar dari Grup</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PILIH KONTAK UNTUK DITAMBAHKAN KE GRUP -->
+    <div id="add-member-to-group-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-surface-container-lowest p-5 rounded-[2rem] shadow-xl border border-primary-fixed/50 flex flex-col gap-3 max-h-[75vh]">
+            <div class="flex justify-between items-center border-b border-primary-fixed/30 pb-2">
+                <h3 class="font-bold text-sm text-primary">Tambah Kontak ke Grup</h3>
+                <button id="close-add-member-modal" class="text-on-surface-variant text-xs font-bold">✕</button>
+            </div>
+            <p class="text-[11px] text-on-surface-variant">Pilih kontak teman Anda yang ingin dimasukkan ke grup ini:</p>
+            
+            <div id="add-member-contact-list" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 p-1"></div>
+
+            <button id="btn-confirm-add-members" class="w-full py-2.5 bg-primary hover:bg-primary-container text-white rounded-xl text-xs font-bold shadow-md transition-all">
+                Tambahkan Ke Grup
+            </button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-40 bg-surface/80 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(255,105,180,0.12)]">
+        <div class="h-16 px-5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <button id="btn-back-contacts" class="hidden text-primary">
+                    <span class="material-symbols-outlined text-2xl">arrow_back</span>
+                </button>
+                
+                <div id="header-avatar-container" class="relative cursor-pointer group">
+                    <div id="header-avatar" class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-sm overflow-hidden shadow-sm border border-primary-fixed-dim">
+                        <span class="material-symbols-outlined text-xl">person</span>
+                    </div>
+                    <div id="avatar-edit-overlay" class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="material-symbols-outlined text-xs">photo_camera</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col">
+                    <div class="flex items-center gap-1">
+                        <span id="header-title" class="font-bold text-base text-primary tracking-tight leading-tight truncate max-w-[130px]">Profil Saya</span>
+                        <span id="header-verified-badge" class="hidden material-symbols-outlined text-sky-500 text-sm select-none" style="font-variation-settings: 'FILL' 1;">verified</span>
+                        <button id="btn-edit-contact-name" class="hidden text-primary-container hover:text-primary transition-colors ml-1">
+                            <span class="material-symbols-outlined text-sm">edit</span>
+                        </button>
+                    </div>
+                    <span id="header-subtitle" class="text-[10px] text-on-surface-variant/80 font-semibold">Klik foto untuk ubah</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="btn-toggle-chat-search" class="hidden bg-primary-fixed/60 text-primary p-2 rounded-full flex items-center justify-center shadow-sm">
+                    <span class="material-symbols-outlined text-xl">search</span>
+                </button>
+                <button id="open-group-modal" class="bg-primary-fixed/60 text-primary p-2 rounded-full flex items-center justify-center shadow-sm">
+                    <span class="material-symbols-outlined text-xl">group_add</span>
+                </button>
+                <button id="open-add-modal" class="bg-primary-fixed text-primary p-2 rounded-full flex items-center justify-center shadow-sm">
+                    <span class="material-symbols-outlined text-xl">person_add</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="chat-search-bar" class="hidden px-4 pb-2">
+            <div class="relative flex items-center">
+                <input type="text" id="chat-search-input" placeholder="Cari pesan di chat ini..." 
+                       class="w-full pl-8 pr-8 py-1.5 text-xs bg-surface border border-primary-fixed rounded-xl outline-none focus:ring-2 focus:ring-primary-container"/>
+                <span class="material-symbols-outlined absolute left-2 text-primary-fixed-dim text-sm">search</span>
+                <button id="close-chat-search" class="absolute right-2 text-on-surface-variant text-xs font-bold">✕</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 relative w-full pt-16 pb-32 px-4 z-10 flex flex-col items-center justify-center max-w-md mx-auto">
+        <div class="w-full h-[72vh] flex flex-col bg-surface-container-lowest/80 backdrop-blur-md rounded-[2rem] shadow-[0_8px_32px_rgba(255,105,180,0.15)] border border-white/60 overflow-hidden">
+            
+            <!-- LIST KONTAK & GRUP -->
+            <div id="contacts-screen" class="flex-1 p-4 overflow-y-auto custom-scrollbar flex flex-col gap-2">
+                <div class="relative mb-1">
+                    <input type="text" id="contact-search-input" placeholder="Cari kontak atau grup..." 
+                           class="w-full pl-9 pr-4 py-2 text-xs bg-surface border border-primary-fixed rounded-xl outline-none focus:ring-2 focus:ring-primary-container text-on-surface"/>
+                    <span class="material-symbols-outlined absolute left-3 top-2.5 text-primary-fixed-dim text-base">search</span>
+                </div>
+
+                <div id="contacts-empty" class="h-full flex flex-col items-center justify-center text-center p-6 text-on-surface-variant/60">
+                    <span class="material-symbols-outlined text-5xl mb-2 text-primary-fixed-dim">chat_bubble_outline</span>
+                    <p class="text-xs font-semibold">Belum ada obrolan.</p>
+                    <p class="text-[10px]">Klik ikon + di atas untuk menambah kontak atau buat grup!</p>
+                </div>
+                <div id="contacts-list" class="flex flex-col gap-2"></div>
+            </div>
+
+            <!-- RUANG CHAT -->
+            <div id="chat-screen" class="hidden flex-1 flex-col h-full overflow-hidden">
+                <div id="chat-messages" class="flex-1 p-4 overflow-y-auto flex flex-col gap-3 custom-scrollbar">
+                    <div id="chat-empty" class="h-full flex flex-col items-center justify-center text-center p-6 text-on-surface-variant/60">
+                        <span class="material-symbols-outlined text-5xl mb-2 text-primary-fixed-dim">mark_chat_unread</span>
+                        <p class="text-xs font-semibold">Ruang chat masih kosong.</p>
+                        <p class="text-[10px]">Kirim pesan pertama kamu di bawah ini! ✨</p>
+                    </div>
+                </div>
+
+                <!-- PREVIEW BALAS PESAN (REPLY BANNER) -->
+                <div id="reply-preview-bar" class="hidden bg-surface-container-low px-4 py-2 border-t border-primary-fixed/30 flex items-center justify-between">
+                    <div class="flex flex-col text-xs overflow-hidden pr-2">
+                        <span id="reply-preview-name" class="font-bold text-primary text-[10px]"></span>
+                        <span id="reply-preview-text" class="text-on-surface-variant text-[11px] truncate"></span>
+                    </div>
+                    <button type="button" id="btn-cancel-reply" class="text-on-surface-variant font-bold text-xs p-1">✕</button>
+                </div>
+
+                <form id="chat-form" class="p-3 bg-surface-container/60 border-t border-primary-fixed/40 flex items-center gap-2">
+                    <button type="button" id="btn-voice-note" class="bg-primary-fixed hover:bg-primary-fixed-dim text-primary p-2.5 rounded-2xl flex items-center justify-center transition-all active:scale-95 shadow-sm" title="Pesan Suara">
+                        <span class="material-symbols-outlined text-sm" id="voice-icon">mic</span>
+                    </button>
+
+                    <button type="button" id="btn-send-image" class="bg-primary-fixed hover:bg-primary-fixed-dim text-primary p-2.5 rounded-2xl flex items-center justify-center transition-all active:scale-95 shadow-sm" title="Kirim Foto">
+                        <span class="material-symbols-outlined text-sm">photo_camera</span>
+                    </button>
+
+                    <input type="text" id="message-input" placeholder="Ketik pesan... ✨" autocomplete="off"
+                           class="flex-1 px-4 py-2.5 text-xs font-medium bg-surface/90 border border-primary-fixed rounded-2xl outline-none focus:ring-2 focus:ring-primary-container text-on-surface"/>
+                    <button type="submit" 
+                            class="bg-primary hover:bg-primary-container text-on-primary font-bold px-4 py-2.5 rounded-2xl text-xs shadow-md transition-all active:scale-95 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-sm">send</span>
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 w-full z-40 pb-safe bg-surface-container-low/90 backdrop-blur-xl shadow-[0_-4px_20px_rgba(172,36,113,0.08)]" data-active-classes="text-primary active-glow scale-110">
+      <div class="flex justify-around items-center h-16 px-md">
+        <a class="flex flex-col items-center justify-center gap-xs w-20 h-full text-on-surface-variant transition-all duration-300 transform active:scale-95" data-path="beranda" href="gamebocil.html">
+          <span class="material-symbols-outlined">home</span>
+          <span class="font-label-sm text-label-sm">Beranda</span>
+        </a>
+        <a class="flex flex-col items-center justify-center gap-xs w-20 h-full text-on-surface-variant transition-all duration-300 transform active:scale-95" data-path="game" href="game.html">
+          <span class="material-symbols-outlined">videogame_asset</span>
+          <span class="font-label-sm text-label-sm">Game</span>
+        </a>
+        <a class="flex flex-col items-center justify-center gap-xs w-20 h-full text-on-surface-variant transition-all duration-300 transform active:scale-95" data-path="chat" href="cerita.html">
+          <span class="material-symbols-outlined">book_5</span>
+          <span class="font-label-sm text-label-sm">Cerita!</span>
+        </a>
+        <a aria-current="page" class="flex flex-col items-center justify-center gap-xs w-20 h-full transition-all duration-300 transform text-primary active-glow scale-110" data-path="cerita" href="chat.html">
+          <span class="material-symbols-outlined">forum</span>
+          <span class="font-label-sm text-label-sm">Chat</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Hujan Emoji Script -->
+    <script>
+        function createEmoji() {
+            const container = document.getElementById('emoji-container');
+            const emojis = ['🌸', '✨', '🎀', '🍬', '🍭', '💖'];
+            const emoji = document.createElement('div');
+            emoji.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            emoji.className = 'emoji-rain';
+            emoji.style.left = Math.random() * 100 + 'vw';
+            emoji.style.fontSize = (Math.random() * 16 + 12) + 'px';
+            const duration = Math.random() * 5 + 5;
+            emoji.style.animationDuration = duration + 's';
+            container.appendChild(emoji);
+            setTimeout(() => { emoji.remove(); }, duration * 1000);
+        }
+        setInterval(createEmoji, 900);
+    </script>
+
+    <!-- Firebase Realtime Database Integration Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, get, push, update, remove, onValue, onDisconnect, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtgrpE8DRGp9Mh-8SqjHPzSg0QXeezT1I",
+            authDomain: "chat-lucu-app.firebaseapp.com",
+            databaseURL: "https://chat-lucu-app-default-rtdb.firebaseio.com",
+            projectId: "chat-lucu-app",
+            storageBucket: "chat-lucu-app.firebasestorage.app",
+            messagingSenderId: "961328467724",
+            appId: "1:961328467724:web:c64faa005c1bde65588329"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        const VERIFIED_PHONES = ['089678445030'];
+
+        let currentUser = JSON.parse(localStorage.getItem('chat_user')) || null;
+        let activeContact = null;
+        let activeRoomId = null;
+        let roomMessagesListener = null;
+        let presenceListener = null;
+        let contactListeners = {};
+        let loadedMessages = [];
+        let myContactsList = [];
+        let currentGroupData = null;
+        let replyData = null;
+
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+
+        const authModal = document.getElementById('auth-modal');
+        const authForm = document.getElementById('auth-form');
+        const btnSubmitAuth = document.getElementById('btn-submit-auth');
+        
+        const addContactModal = document.getElementById('add-contact-modal');
+        const addContactForm = document.getElementById('add-contact-form');
+        const btnSubmitContact = document.getElementById('btn-submit-contact');
+        const openAddModalBtn = document.getElementById('open-add-modal');
+        const closeAddModalBtn = document.getElementById('close-add-modal');
+
+        const editContactModal = document.getElementById('edit-contact-modal');
+        const editContactForm = document.getElementById('edit-contact-form');
+        const editContactNameInput = document.getElementById('edit-contact-name-input');
+        const closeEditContactModalBtn = document.getElementById('close-edit-contact-modal');
+
+        const createGroupModal = document.getElementById('create-group-modal');
+        const createGroupForm = document.getElementById('create-group-form');
+        const openGroupModalBtn = document.getElementById('open-group-modal');
+        const closeGroupModalBtn = document.getElementById('close-group-modal');
+        const groupContactSelector = document.getElementById('group-contact-selector');
+
+        const photoSourceModal = document.getElementById('photo-source-modal');
+        const btnChooseCamera = document.getElementById('btn-choose-camera');
+        const btnChooseGallery = document.getElementById('btn-choose-gallery');
+        const closePhotoSourceModalBtn = document.getElementById('close-photo-source-modal');
+
+        const groupInfoModal = document.getElementById('group-info-modal');
+        const closeGroupInfoModalBtn = document.getElementById('close-group-info-modal');
+        const groupEditSection = document.getElementById('group-edit-section');
+        const groupReadonlySection = document.getElementById('group-readonly-section');
+        const editGroupNameInput = document.getElementById('edit-group-name');
+        const editGroupDescInput = document.getElementById('edit-group-desc');
+        const btnSaveGroupSettings = document.getElementById('btn-save-group-settings');
+        const infoGroupTitle = document.getElementById('info-group-title');
+        const infoGroupDesc = document.getElementById('info-group-desc');
+        const groupMembersList = document.getElementById('group-members-list');
+        const btnLeaveGroup = document.getElementById('btn-leave-group');
+
+        const openAddMemberModalBtn = document.getElementById('open-add-member-modal-btn');
+        const addMemberToGroupModal = document.getElementById('add-member-to-group-modal');
+        const closeAddMemberModalBtn = document.getElementById('close-add-member-modal');
+        const addMemberContactList = document.getElementById('add-member-contact-list');
+        const btnConfirmAddMembers = document.getElementById('btn-confirm-add-members');
+        
+        const btnBackContacts = document.getElementById('btn-back-contacts');
+        const headerTitle = document.getElementById('header-title');
+        const headerSubtitle = document.getElementById('header-subtitle');
+        const headerAvatar = document.getElementById('header-avatar');
+        const headerAvatarContainer = document.getElementById('header-avatar-container');
+        const avatarEditOverlay = document.getElementById('avatar-edit-overlay');
+        const profileUploadInput = document.getElementById('profile-upload-input');
+        const imageGalleryInput = document.getElementById('image-gallery-input');
+        const imageCameraInput = document.getElementById('image-camera-input');
+        const btnEditContactName = document.getElementById('btn-edit-contact-name');
+        const headerVerifiedBadge = document.getElementById('header-verified-badge');
+
+        const contactSearchInput = document.getElementById('contact-search-input');
+        const btnToggleChatSearch = document.getElementById('btn-toggle-chat-search');
+        const chatSearchBar = document.getElementById('chat-search-bar');
+        const chatSearchInput = document.getElementById('chat-search-input');
+        const closeChatSearchBtn = document.getElementById('close-chat-search');
+
+        const contactsScreen = document.getElementById('contacts-screen');
+        const contactsList = document.getElementById('contacts-list');
+        const contactsEmpty = document.getElementById('contacts-empty');
+
+        const chatScreen = document.getElementById('chat-screen');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatEmpty = document.getElementById('chat-empty');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const btnVoiceNote = document.getElementById('btn-voice-note');
+        const btnSendImage = document.getElementById('btn-send-image');
+        const voiceIcon = document.getElementById('voice-icon');
+
+        const replyPreviewBar = document.getElementById('reply-preview-bar');
+        const replyPreviewName = document.getElementById('reply-preview-name');
+        const replyPreviewText = document.getElementById('reply-preview-text');
+        const btnCancelReply = document.getElementById('btn-cancel-reply');
+
+        // Close dropdown saat klik area mana saja
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.message-menu-btn')) {
+                document.querySelectorAll('.message-dropdown').forEach(el => el.classList.add('hidden'));
+            }
+        });
+
+        if (currentUser) {
+            authModal.classList.add('hidden');
+            setupPresenceSystem();
+            loadUserProfile();
+            loadContacts();
+            loadGroups();
+        }
+
+        function setupPresenceSystem() {
+            if (!currentUser) return;
+            const userStatusRef = ref(database, `status/${currentUser.phone}`);
+            const connectedRef = ref(database, '.info/connected');
+
+            onValue(connectedRef, (snap) => {
+                if (snap.val() === true) {
+                    onDisconnect(userStatusRef).set({ state: 'offline', last_seen: new Date().toISOString() });
+                    set(userStatusRef, { state: 'online', last_seen: new Date().toISOString() });
+                }
+            });
+        }
+
+        function loadUserProfile() {
+            const userRef = ref(database, `users/${currentUser.phone}`);
+            onValue(userRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    currentUser.photo = userData.photo || null;
+                    localStorage.setItem('chat_user', JSON.stringify(currentUser));
+                    
+                    if (!activeContact) {
+                        headerTitle.innerText = userData.name || "Profil Saya";
+                        updateAvatarElement(headerAvatar, userData.photo, userData.name);
+                        if (VERIFIED_PHONES.includes(currentUser.phone)) headerVerifiedBadge.classList.remove('hidden');
+                        else headerVerifiedBadge.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim().replace(/[^0-9]/g, '');
+
+            if (!name || !phone) {
+                alert("Mohon isi Nama dan Nomor Telepon dengan benar.");
+                return;
+            }
+
+            btnSubmitAuth.innerText = "Mendaftarkan...";
+            btnSubmitAuth.disabled = true;
+
+            try {
+                await set(ref(database, `users/${phone}`), { name, phone, photo: null, createdAt: new Date().toISOString() });
+                currentUser = { name, phone, photo: null };
+                localStorage.setItem('chat_user', JSON.stringify(currentUser));
+
+                authModal.classList.add('hidden');
+                setupPresenceSystem();
+                loadUserProfile();
+                loadContacts();
+                loadGroups();
+            } catch (error) {
+                alert("Gagal mendaftarkan nomor.");
+            } finally {
+                btnSubmitAuth.innerText = "Mulai Chatting";
+                btnSubmitAuth.disabled = false;
+            }
+        });
+
+        headerAvatarContainer.addEventListener('click', () => {
+            if (!activeContact) {
+                profileUploadInput.click();
+            } else if (activeContact.isGroup) {
+                openGroupInfoModal();
+            }
+        });
+
+        profileUploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) return alert("Ukuran foto maksimal 2MB!");
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                await update(ref(database, `users/${currentUser.phone}`), { photo: event.target.result });
+                alert("Foto profil berhasil diperbarui! ✨");
+            };
+            reader.readAsDataURL(file);
+        });
+
+        btnSendImage.addEventListener('click', () => {
+            if (activeRoomId) photoSourceModal.classList.remove('hidden');
+        });
+
+        closePhotoSourceModalBtn.addEventListener('click', () => photoSourceModal.classList.add('hidden'));
+
+        btnChooseGallery.addEventListener('click', () => {
+            photoSourceModal.classList.add('hidden');
+            imageGalleryInput.click();
+        });
+
+        btnChooseCamera.addEventListener('click', () => {
+            photoSourceModal.classList.add('hidden');
+            imageCameraInput.click();
+        });
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 3 * 1024 * 1024) return alert("Ukuran gambar maksimal 3MB!");
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const base64Image = event.target.result;
+                try {
+                    const newMsgRef = push(ref(database, `rooms/${activeRoomId}`));
+                    const payload = {
+                        senderPhone: currentUser.phone,
+                        senderName: currentUser.name,
+                        imageData: base64Image,
+                        type: 'image',
+                        status: 'sent',
+                        createdAt: Date.now(),
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    };
+                    if (replyData) {
+                        payload.replyTo = replyData;
+                        cancelReply();
+                    }
+                    await set(newMsgRef, payload);
+                } catch (err) {
+                    alert("Gagal mengirim gambar.");
+                }
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+        }
+
+        imageGalleryInput.addEventListener('change', handleImageUpload);
+        imageCameraInput.addEventListener('change', handleImageUpload);
+
+        openAddModalBtn.addEventListener('click', () => addContactModal.classList.remove('hidden'));
+        closeAddModalBtn.addEventListener('click', () => addContactModal.classList.add('hidden'));
+
+        addContactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const phoneTarget = document.getElementById('contact-phone').value.trim().replace(/[^0-9]/g, '');
+
+            if (!phoneTarget || phoneTarget === currentUser.phone) return alert("Nomor telepon tidak valid!");
+            btnSubmitContact.innerText = "Mencari...";
+            btnSubmitContact.disabled = true;
+
+            try {
+                const snapshot = await get(child(ref(database), `users/${phoneTarget}`));
+                if (snapshot.exists()) {
+                    const targetUser = snapshot.val();
+                    await set(ref(database, `contacts/${currentUser.phone}/${phoneTarget}`), { name: targetUser.name, phone: targetUser.phone });
+                    addContactModal.classList.add('hidden');
+                    document.getElementById('contact-phone').value = '';
+                    loadContacts();
+                    alert(`Berhasil menambahkan ${targetUser.name}!`);
+                } else {
+                    alert("Nomor telepon belum terdaftar!");
+                }
+            } catch (error) {
+                alert("Terjadi kesalahan.");
+            } finally {
+                btnSubmitContact.innerText = "Cari & Tambahkan";
+                btnSubmitContact.disabled = false;
+            }
+        });
+
+        btnEditContactName.addEventListener('click', () => {
+            if (activeContact && !activeContact.isGroup) {
+                editContactNameInput.value = activeContact.name || '';
+                editContactModal.classList.remove('hidden');
+            }
+        });
+
+        closeEditContactModalBtn.addEventListener('click', () => editContactModal.classList.add('hidden'));
+
+        editContactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newName = editContactNameInput.value.trim();
+            if (!newName || !activeContact || activeContact.isGroup) return;
+
+            try {
+                await update(ref(database, `contacts/${currentUser.phone}/${activeContact.phone}`), { name: newName });
+                activeContact.name = newName;
+                headerTitle.innerText = newName;
+                editContactModal.classList.add('hidden');
+                loadContacts();
+                alert("Nama kontak berhasil diperbarui! ✨");
+            } catch (err) {
+                alert("Gagal memperbarui nama kontak.");
+            }
+        });
+
+        openGroupModalBtn.addEventListener('click', () => {
+            renderGroupContactSelector();
+            createGroupModal.classList.remove('hidden');
+        });
+
+        closeGroupModalBtn.addEventListener('click', () => createGroupModal.classList.add('hidden'));
+
+        function renderGroupContactSelector() {
+            groupContactSelector.innerHTML = '';
+            if (myContactsList.length === 0) {
+                groupContactSelector.innerHTML = `<p class="text-[10px] text-on-surface-variant p-2">Tambahkan kontak dulu untuk membuat grup.</p>`;
+                return;
+            }
+
+            myContactsList.forEach(c => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center gap-2 p-1.5 rounded-lg hover:bg-surface text-xs cursor-pointer';
+                label.innerHTML = `
+                    <input type="checkbox" value="${c.phone}" class="group-member-checkbox text-primary rounded border-primary-fixed focus:ring-primary-container"/>
+                    <span class="font-bold text-on-surface truncate">${escapeHtml(c.name)}</span>
+                    <span class="text-[10px] text-on-surface-variant">(${c.phone})</span>
+                `;
+                groupContactSelector.appendChild(label);
+            });
+        }
+
+        createGroupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const groupName = document.getElementById('group-name-input').value.trim();
+            const groupDesc = document.getElementById('group-desc-input').value.trim();
+            const checkedBoxes = document.querySelectorAll('.group-member-checkbox:checked');
+            const selectedPhones = Array.from(checkedBoxes).map(cb => cb.value);
+
+            if (!groupName) return alert("Nama grup harus diisi!");
+            if (selectedPhones.length < 1) return alert("Grup harus berisi minimal 2 orang (Pilih min 1 kontak teman)!");
+
+            const members = [currentUser.phone, ...selectedPhones];
+            const groupId = 'group_' + Date.now();
+
+            try {
+                await set(ref(database, `groups/${groupId}`), {
+                    id: groupId,
+                    name: groupName,
+                    desc: groupDesc || "Belum ada deskripsi grup.",
+                    createdBy: currentUser.phone,
+                    admins: [currentUser.phone],
+                    members: members,
+                    createdAt: new Date().toISOString()
+                });
+
+                createGroupModal.classList.add('hidden');
+                document.getElementById('group-name-input').value = '';
+                document.getElementById('group-desc-input').value = '';
+                loadGroups();
+                alert(`Grup "${groupName}" berhasil dibuat! ✨`);
+            } catch (err) {
+                alert("Gagal membuat grup.");
+            }
+        });
+
+        closeGroupInfoModalBtn.addEventListener('click', () => groupInfoModal.classList.add('hidden'));
+
+        async function openGroupInfoModal() {
+            if (!activeContact || !activeContact.isGroup) return;
+
+            const groupSnap = await get(ref(database, `groups/${activeContact.id}`));
+            if (!groupSnap.exists()) return;
+
+            currentGroupData = groupSnap.val();
+            const admins = currentGroupData.admins || [currentGroupData.createdBy];
+            const isAdmin = admins.includes(currentUser.phone);
+
+            groupInfoModal.classList.remove('hidden');
+
+            if (isAdmin) {
+                groupEditSection.classList.remove('hidden');
+                groupEditSection.classList.add('flex');
+                groupReadonlySection.classList.add('hidden');
+
+                editGroupNameInput.value = currentGroupData.name;
+                editGroupDescInput.value = currentGroupData.desc || '';
+            } else {
+                groupEditSection.classList.add('hidden');
+                groupEditSection.classList.remove('flex');
+                groupReadonlySection.classList.remove('hidden');
+
+                infoGroupTitle.innerText = currentGroupData.name;
+                infoGroupDesc.innerText = currentGroupData.desc || 'Belum ada deskripsi.';
+            }
+
+            groupMembersList.innerHTML = '';
+            for (const memberPhone of currentGroupData.members) {
+                const userSnap = await get(ref(database, `users/${memberPhone}`));
+                const memberName = userSnap.exists() ? userSnap.val().name : memberPhone;
+                const isMemberAdmin = admins.includes(memberPhone);
+                const isCreator = currentGroupData.createdBy === memberPhone;
+
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between p-2 rounded-xl bg-surface border border-primary-fixed/20 text-xs';
+                
+                let adminBadge = isCreator 
+                    ? `<span class="text-[9px] bg-primary text-white font-bold px-1.5 py-0.5 rounded-md">Pembuat</span>` 
+                    : (isMemberAdmin ? `<span class="text-[9px] bg-primary-container text-white font-bold px-1.5 py-0.5 rounded-md">Admin</span>` : '');
+
+                let actions = '';
+                if (isAdmin && memberPhone !== currentUser.phone && !isCreator) {
+                    const adminToggleText = isMemberAdmin ? 'Copot Admin' : 'Jadikan Admin';
+                    actions = `
+                        <div class="flex items-center gap-1">
+                            <button onclick="window.toggleAdmin('${memberPhone}', ${isMemberAdmin})" class="text-[10px] bg-primary-fixed text-primary px-2 py-1 rounded-lg font-bold hover:bg-primary-fixed-dim">${adminToggleText}</button>
+                            <button onclick="window.removeMember('${memberPhone}')" class="text-[10px] bg-red-100 text-red-600 px-2 py-1 rounded-lg font-bold hover:bg-red-200">Keluarkannya</button>
+                        </div>
+                    `;
+                }
+
+                row.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-on-surface">${escapeHtml(memberName)} ${memberPhone === currentUser.phone ? '(Anda)' : ''}</span>
+                        ${adminBadge}
+                    </div>
+                    ${actions}
+                `;
+                groupMembersList.appendChild(row);
+            }
+        }
+
+        openAddMemberModalBtn.addEventListener('click', () => {
+            if (!currentGroupData) return;
+            addMemberContactList.innerHTML = '';
+
+            const availableContacts = myContactsList.filter(c => !currentGroupData.members.includes(c.phone));
+
+            if (availableContacts.length === 0) {
+                addMemberContactList.innerHTML = `<p class="text-xs text-on-surface-variant/70 text-center py-4">Semua kontak Anda sudah masuk ke dalam grup ini.</p>`;
+                btnConfirmAddMembers.disabled = true;
+                btnConfirmAddMembers.classList.add('opacity-50');
+            } else {
+                btnConfirmAddMembers.disabled = false;
+                btnConfirmAddMembers.classList.remove('opacity-50');
+
+                availableContacts.forEach(c => {
+                    const label = document.createElement('label');
+                    label.className = 'flex items-center gap-3 p-2 rounded-xl bg-surface border border-primary-fixed/20 text-xs cursor-pointer hover:bg-primary-fixed/20 transition-all';
+                    label.innerHTML = `
+                        <input type="checkbox" value="${c.phone}" class="add-to-group-checkbox text-primary rounded border-primary-fixed focus:ring-primary-container"/>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-on-surface">${escapeHtml(c.name)}</span>
+                            <span class="text-[10px] text-on-surface-variant">${c.phone}</span>
+                        </div>
+                    `;
+                    addMemberContactList.appendChild(label);
+                });
+            }
+
+            addMemberToGroupModal.classList.remove('hidden');
+        });
+
+        closeAddMemberModalBtn.addEventListener('click', () => addMemberToGroupModal.classList.add('hidden'));
+
+        btnConfirmAddMembers.addEventListener('click', async () => {
+            const checkedBoxes = document.querySelectorAll('.add-to-group-checkbox:checked');
+            const selectedPhones = Array.from(checkedBoxes).map(cb => cb.value);
+
+            if (selectedPhones.length === 0) return alert("Pilih minimal satu kontak untuk ditambahkan!");
+
+            btnConfirmAddMembers.innerText = "Menambahkan...";
+            btnConfirmAddMembers.disabled = true;
+
+            try {
+                const updatedMembers = [...currentGroupData.members, ...selectedPhones];
+                await update(ref(database, `groups/${currentGroupData.id}`), { members: updatedMembers });
+
+                const newMsgRef = push(ref(database, `rooms/${currentGroupData.id}`));
+                await set(newMsgRef, {
+                    senderPhone: "system",
+                    senderName: "Sistem",
+                    text: `📌 ${currentUser.name} telah menambahkan ${selectedPhones.length} anggota baru ke dalam grup.`,
+                    type: 'text',
+                    createdAt: Date.now(),
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+
+                addMemberToGroupModal.classList.add('hidden');
+                openGroupInfoModal();
+                alert("Anggota berhasil ditambahkan ke grup! ✨");
+            } catch (err) {
+                alert("Gagal menambahkan anggota.");
+            } finally {
+                btnConfirmAddMembers.innerText = "Tambahkan Ke Grup";
+                btnConfirmAddMembers.disabled = false;
+            }
+        });
+
+        btnSaveGroupSettings.addEventListener('click', async () => {
+            const newName = editGroupNameInput.value.trim();
+            const newDesc = editGroupDescInput.value.trim();
+
+            if (!newName) return alert("Nama grup tidak boleh kosong!");
+
+            await update(ref(database, `groups/${currentGroupData.id}`), {
+                name: newName,
+                desc: newDesc
+            });
+
+            headerTitle.innerText = newName;
+            activeContact.name = newName;
+            groupInfoModal.classList.add('hidden');
+            loadGroups();
+            alert("Pengaturan grup diperbarui!");
+        });
+
+        window.toggleAdmin = async function(phone, isCurrentlyAdmin) {
+            let admins = currentGroupData.admins || [currentGroupData.createdBy];
+            if (isCurrentlyAdmin) {
+                admins = admins.filter(p => p !== phone);
+            } else {
+                admins.push(phone);
+            }
+
+            await update(ref(database, `groups/${currentGroupData.id}`), { admins });
+            openGroupInfoModal();
+        };
+
+        window.removeMember = async function(phone) {
+            if (!confirm("Yakin ingin mengeluarkan anggota ini?")) return;
+            const newMembers = currentGroupData.members.filter(p => p !== phone);
+            await update(ref(database, `groups/${currentGroupData.id}`), { members: newMembers });
+            openGroupInfoModal();
+        };
+
+        btnLeaveGroup.addEventListener('click', async () => {
+            if (!confirm("Yakin ingin keluar dari grup ini?")) return;
+
+            const newMembers = currentGroupData.members.filter(p => p !== currentUser.phone);
+            let newAdmins = (currentGroupData.admins || []).filter(p => p !== currentUser.phone);
+
+            if (newMembers.length === 0) {
+                await remove(ref(database, `groups/${currentGroupData.id}`));
+            } else {
+                if (newAdmins.length === 0 && newMembers.length > 0) newAdmins = [newMembers[0]];
+                await update(ref(database, `groups/${currentGroupData.id}`), {
+                    members: newMembers,
+                    admins: newAdmins
+                });
+            }
+
+            groupInfoModal.classList.add('hidden');
+            btnBackContacts.click();
+            loadGroups();
+        });
+
+        function loadContacts() {
+            onValue(ref(database, `contacts/${currentUser.phone}`), (snapshot) => {
+                myContactsList = [];
+                if (snapshot.exists()) {
+                    snapshot.forEach((childSnapshot) => { myContactsList.push(childSnapshot.val()); });
+                }
+                renderAllChats();
+            });
+        }
+
+        function loadGroups() {
+            onValue(ref(database, `groups`), () => renderAllChats());
+        }
+
+        async function renderAllChats() {
+            contactsList.innerHTML = '';
+            let hasAnyChat = false;
+
+            myContactsList.forEach(contact => {
+                hasAnyChat = true;
+                renderContactCard(contact);
+                listenLastMessageAndUnread(contact);
+            });
+
+            const groupsSnap = await get(ref(database, `groups`));
+            if (groupsSnap.exists()) {
+                groupsSnap.forEach(gSnap => {
+                    const group = gSnap.val();
+                    if (group.members && group.members.includes(currentUser.phone)) {
+                        hasAnyChat = true;
+                        renderGroupCard(group);
+                        listenGroupLastMessageAndUnread(group);
+                    }
+                });
+            }
+
+            if (!hasAnyChat) contactsEmpty.classList.remove('hidden');
+            else contactsEmpty.classList.add('hidden');
+            filterContacts();
+        }
+
+        function renderContactCard(contact) {
+            let card = document.getElementById(`contact-${contact.phone}`);
+            if (!card) {
+                card = document.createElement('div');
+                card.id = `contact-${contact.phone}`;
+                card.className = 'chat-item-card p-3 bg-surface/90 border border-primary-fixed/40 rounded-2xl flex items-center justify-between cursor-pointer hover:bg-primary-fixed/20 transition-all';
+                contactsList.appendChild(card);
+            }
+            
+            const isVerified = VERIFIED_PHONES.includes(contact.phone);
+            const verifiedBadgeHtml = isVerified ? `<span class="material-symbols-outlined text-sky-500 text-xs leading-none select-none ml-1" style="font-variation-settings: 'FILL' 1;">verified</span>` : '';
+
+            card.innerHTML = `
+                <div class="flex items-center gap-3 overflow-hidden flex-1 mr-2">
+                    <div id="avatar-list-${contact.phone}" class="w-10 h-10 rounded-full bg-primary-fixed flex-shrink-0 flex items-center justify-center text-primary font-bold text-sm overflow-hidden border border-primary-fixed-dim">
+                        ${contact.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center min-w-0">
+                                <p class="search-target-name font-bold text-xs text-on-surface truncate">${escapeHtml(contact.name)}</p>
+                                ${verifiedBadgeHtml}
+                            </div>
+                            <span id="time-${contact.phone}" class="text-[9px] text-on-surface-variant/70 ml-1 flex-shrink-0"></span>
+                        </div>
+                        <p id="preview-${contact.phone}" class="text-[11px] text-on-surface-variant truncate font-medium mt-0.5">${contact.phone}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 flex-shrink-0">
+                    <span id="badge-${contact.phone}" class="hidden bg-primary text-white font-bold text-[9px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 shadow-sm">0</span>
+                    <span class="material-symbols-outlined text-primary text-sm">chevron_right</span>
+                </div>
+            `;
+
+            onValue(ref(database, `users/${contact.phone}`), (snap) => {
+                if (snap.exists()) {
+                    const avatarListEl = document.getElementById(`avatar-list-${contact.phone}`);
+                    if (avatarListEl) updateAvatarElement(avatarListEl, snap.val().photo, contact.name);
+                }
+            });
+
+            card.onclick = () => openChatRoom(contact);
+        }
+
+        function renderGroupCard(group) {
+            let card = document.getElementById(`group-${group.id}`);
+            if (!card) {
+                card = document.createElement('div');
+                card.id = `group-${group.id}`;
+                card.className = 'chat-item-card p-3 bg-surface/90 border border-primary-fixed/40 rounded-2xl flex items-center justify-between cursor-pointer hover:bg-primary-fixed/20 transition-all';
+                contactsList.appendChild(card);
+            }
+
+            card.innerHTML = `
+                <div class="flex items-center gap-3 overflow-hidden flex-1 mr-2">
+                    <div class="w-10 h-10 rounded-full bg-primary-container flex-shrink-0 flex items-center justify-center text-white font-bold text-sm overflow-hidden border border-primary-fixed-dim">
+                        <span class="material-symbols-outlined text-xl">groups</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <p class="search-target-name font-bold text-xs text-on-surface truncate">${escapeHtml(group.name)}</p>
+                            <span id="time-${group.id}" class="text-[9px] text-on-surface-variant/70 ml-1 flex-shrink-0"></span>
+                        </div>
+                        <p id="preview-${group.id}" class="text-[11px] text-on-surface-variant truncate font-medium mt-0.5">${group.members.length} anggota</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 flex-shrink-0">
+                    <span class="material-symbols-outlined text-primary text-sm">chevron_right</span>
+                </div>
+            `;
+
+            card.onclick = () => openGroupChatRoom(group);
+        }
+
+        function listenLastMessageAndUnread(contact) {
+            const roomId = [currentUser.phone, contact.phone].sort().join('_');
+            if (contactListeners[contact.phone]) contactListeners[contact.phone]();
+
+            contactListeners[contact.phone] = onValue(ref(database, `rooms/${roomId}`), (snapshot) => {
+                const previewEl = document.getElementById(`preview-${contact.phone}`);
+                const timeEl = document.getElementById(`time-${contact.phone}`);
+                const badgeEl = document.getElementById(`badge-${contact.phone}`);
+                if (!previewEl) return;
+
+                if (snapshot.exists()) {
+                    let lastMsg = null;
+                    let unreadCount = 0;
+
+                    snapshot.forEach((childSnap) => {
+                        const msg = childSnap.val();
+                        lastMsg = msg;
+                        if (msg.senderPhone !== currentUser.phone && msg.status !== 'read') unreadCount++;
+                    });
+
+                    if (lastMsg) {
+                        let textContent = lastMsg.text || '';
+                        if (lastMsg.type === 'audio') textContent = '🎙️ Pesan Suara';
+                        if (lastMsg.type === 'image') textContent = '📷 Foto';
+
+                        previewEl.innerText = (lastMsg.senderPhone === currentUser.phone ? 'Anda: ' : '') + textContent;
+                        timeEl.innerText = lastMsg.timestamp || '';
+
+                        if (unreadCount > 0) {
+                            badgeEl.innerText = unreadCount > 99 ? '99+' : unreadCount;
+                            badgeEl.classList.remove('hidden');
+                        } else badgeEl.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        function listenGroupLastMessageAndUnread(group) {
+            if (contactListeners[group.id]) contactListeners[group.id]();
+
+            contactListeners[group.id] = onValue(ref(database, `rooms/${group.id}`), (snapshot) => {
+                const previewEl = document.getElementById(`preview-${group.id}`);
+                const timeEl = document.getElementById(`time-${group.id}`);
+                if (!previewEl) return;
+
+                if (snapshot.exists()) {
+                    let lastMsg = null;
+                    snapshot.forEach((childSnap) => { lastMsg = childSnap.val(); });
+
+                    if (lastMsg) {
+                        let textContent = lastMsg.text || '';
+                        if (lastMsg.type === 'audio') textContent = '🎙️ Pesan Suara';
+                        if (lastMsg.type === 'image') textContent = '📷 Foto';
+
+                        previewEl.innerText = `${lastMsg.senderName}: ${textContent}`;
+                        timeEl.innerText = lastMsg.timestamp || '';
+                    }
+                }
+            });
+        }
+
+        contactSearchInput.addEventListener('input', filterContacts);
+
+        function filterContacts() {
+            const query = contactSearchInput.value.toLowerCase().trim();
+            document.querySelectorAll('.chat-item-card').forEach(card => {
+                const nameEl = card.querySelector('.search-target-name');
+                const nameText = nameEl ? nameEl.innerText.toLowerCase() : '';
+                if (nameText.includes(query)) card.classList.remove('hidden');
+                else card.classList.add('hidden');
+            });
+        }
+
+        function openChatRoom(contact) {
+            activeContact = { ...contact, isGroup: false };
+            activeRoomId = [currentUser.phone, contact.phone].sort().join('_');
+
+            headerTitle.innerText = contact.name;
+            headerSubtitle.innerText = "Offline";
+            btnBackContacts.classList.remove('hidden');
+            btnEditContactName.classList.remove('hidden');
+            btnToggleChatSearch.classList.remove('hidden');
+            avatarEditOverlay.classList.add('hidden');
+            headerAvatarContainer.classList.remove('cursor-pointer');
+
+            if (VERIFIED_PHONES.includes(contact.phone)) headerVerifiedBadge.classList.remove('hidden');
+            else headerVerifiedBadge.classList.add('hidden');
+
+            contactsScreen.classList.add('hidden');
+            chatScreen.classList.remove('hidden');
+            chatScreen.classList.add('flex');
+
+            onValue(ref(database, `users/${contact.phone}`), (snap) => {
+                if (snap.exists()) updateAvatarElement(headerAvatar, snap.val().photo, contact.name);
+            });
+
+            listenTargetPresence(contact.phone);
+            listenRoomMessages();
+        }
+
+        function openGroupChatRoom(group) {
+            activeContact = { ...group, isGroup: true };
+            activeRoomId = group.id;
+
+            headerTitle.innerText = group.name;
+            headerSubtitle.innerText = "Klik header untuk profil grup ✨";
+            btnBackContacts.classList.remove('hidden');
+            btnEditContactName.classList.add('hidden');
+            btnToggleChatSearch.classList.remove('hidden');
+            
+            avatarEditOverlay.classList.remove('hidden');
+            headerAvatarContainer.classList.add('cursor-pointer');
+            headerVerifiedBadge.classList.add('hidden');
+
+            headerAvatar.innerHTML = `<span class="material-symbols-outlined text-xl">groups</span>`;
+
+            contactsScreen.classList.add('hidden');
+            chatScreen.classList.remove('hidden');
+            chatScreen.classList.add('flex');
+
+            if (presenceListener) presenceListener();
+            listenRoomMessages();
+        }
+
+        btnBackContacts.addEventListener('click', () => {
+            activeContact = null;
+            activeRoomId = null;
+            cancelReply();
+
+            btnBackContacts.classList.add('hidden');
+            btnEditContactName.classList.add('hidden');
+            btnToggleChatSearch.classList.add('hidden');
+            chatSearchBar.classList.add('hidden');
+            chatSearchInput.value = '';
+            avatarEditOverlay.classList.remove('hidden');
+            headerAvatarContainer.classList.add('cursor-pointer');
+
+            headerTitle.innerText = currentUser.name || "Profil Saya";
+            headerSubtitle.innerText = "Klik foto untuk ubah";
+            updateAvatarElement(headerAvatar, currentUser.photo, currentUser.name);
+
+            if (VERIFIED_PHONES.includes(currentUser.phone)) headerVerifiedBadge.classList.remove('hidden');
+            else headerVerifiedBadge.classList.add('hidden');
+
+            chatScreen.classList.add('hidden');
+            chatScreen.classList.remove('flex');
+            contactsScreen.classList.remove('hidden');
+
+            if (roomMessagesListener) roomMessagesListener();
+            if (presenceListener) presenceListener();
+        });
+
+        btnToggleChatSearch.addEventListener('click', () => {
+            chatSearchBar.classList.toggle('hidden');
+            if (!chatSearchBar.classList.contains('hidden')) chatSearchInput.focus();
+            else { chatSearchInput.value = ''; renderAllLoadedMessages(); }
+        });
+
+        closeChatSearchBtn.addEventListener('click', () => {
+            chatSearchBar.classList.add('hidden');
+            chatSearchInput.value = '';
+            renderAllLoadedMessages();
+        });
+
+        chatSearchInput.addEventListener('input', () => {
+            const query = chatSearchInput.value.toLowerCase().trim();
+            if (!query) return renderAllLoadedMessages();
+
+            chatMessages.innerHTML = '';
+            const filtered = loadedMessages.filter(item => item.data.text && item.data.text.toLowerCase().includes(query));
+
+            if (filtered.length === 0) chatMessages.innerHTML = `<div class="text-center text-xs text-on-surface-variant/60 my-auto">Pesan tidak ditemukan...</div>`;
+            else filtered.forEach(item => renderMessageBubble(item.key, item.data));
+        });
+
+        function listenTargetPresence(targetPhone) {
+            if (presenceListener) presenceListener();
+            presenceListener = onValue(ref(database, `status/${targetPhone}`), (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (data.state === 'online') {
+                        headerSubtitle.innerText = 'Online ✨';
+                        headerSubtitle.className = 'text-[10px] text-emerald-600 font-bold';
+                    } else {
+                        const timeStr = data.last_seen ? new Date(data.last_seen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Offline';
+                        headerSubtitle.innerText = `Terakhir dilihat ${timeStr}`;
+                        headerSubtitle.className = 'text-[10px] text-on-surface-variant/80 font-semibold';
+                    }
+                }
+            });
+        }
+
+        function listenRoomMessages() {
+            if (roomMessagesListener) roomMessagesListener();
+
+            roomMessagesListener = onValue(ref(database, `rooms/${activeRoomId}`), (snapshot) => {
+                loadedMessages = [];
+                if (!snapshot.exists()) {
+                    chatMessages.innerHTML = '';
+                    chatEmpty.classList.remove('hidden');
+                    chatMessages.appendChild(chatEmpty);
+                    return;
+                }
+
+                chatEmpty.classList.add('hidden');
+                const updates = {};
+
+                snapshot.forEach((childSnap) => {
+                    const msgKey = childSnap.key;
+                    const msg = childSnap.val();
+                    loadedMessages.push({ key: msgKey, data: msg });
+
+                    if (!activeContact.isGroup && msg.senderPhone !== currentUser.phone && msg.status !== 'read') {
+                        updates[`rooms/${activeRoomId}/${msgKey}/status`] = 'read';
+                    }
+                });
+
+                if (Object.keys(updates).length > 0) update(ref(database), updates);
+                renderAllLoadedMessages();
+            });
+        }
+
+        function renderAllLoadedMessages() {
+            chatMessages.innerHTML = '';
+            if (loadedMessages.length === 0) {
+                chatEmpty.classList.remove('hidden');
+                chatMessages.appendChild(chatEmpty);
+                return;
+            }
+            chatEmpty.classList.add('hidden');
+            loadedMessages.forEach(item => renderMessageBubble(item.key, item.data));
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+
+            if (message && activeRoomId) {
+                let initialStatus = 'sent';
+                if (!activeContact.isGroup) {
+                    const targetStatusSnap = await get(ref(database, `status/${activeContact.phone}`));
+                    if (targetStatusSnap.exists() && targetStatusSnap.val().state === 'online') initialStatus = 'delivered';
+                }
+
+                const newMsgRef = push(ref(database, `rooms/${activeRoomId}`));
+                const payload = {
+                    senderPhone: currentUser.phone,
+                    senderName: currentUser.name,
+                    text: message,
+                    type: 'text',
+                    status: initialStatus,
+                    createdAt: Date.now(),
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+
+                if (replyData) {
+                    payload.replyTo = replyData;
+                    cancelReply();
+                }
+
+                await set(newMsgRef, payload);
+
+                messageInput.value = '';
+                messageInput.focus();
+            }
+        });
+
+        btnVoiceNote.addEventListener('click', async () => {
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.readAsDataURL(audioBlob);
+                        reader.onloadend = async () => {
+                            const newMsgRef = push(ref(database, `rooms/${activeRoomId}`));
+                            const payload = {
+                                senderPhone: currentUser.phone,
+                                senderName: currentUser.name,
+                                audioData: reader.result,
+                                type: 'audio',
+                                status: 'sent',
+                                createdAt: Date.now(),
+                                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            };
+                            if (replyData) {
+                                payload.replyTo = replyData;
+                                cancelReply();
+                            }
+                            await set(newMsgRef, payload);
+                        };
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    voiceIcon.innerText = 'stop';
+                    btnVoiceNote.classList.add('bg-red-500', 'text-white');
+                    messageInput.placeholder = "Merekam suara...";
+                    messageInput.disabled = true;
+                } catch (err) { alert("Akses mikrofon ditolak."); }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                voiceIcon.innerText = 'mic';
+                btnVoiceNote.classList.remove('bg-red-500', 'text-white');
+                messageInput.placeholder = "Ketik pesan... ✨";
+                messageInput.disabled = false;
+            }
+        });
+
+        // REPLY, COPY & EDIT LOGIC
+        window.toggleMsgMenu = function(event, msgKey) {
+            event.stopPropagation();
+            const currentMenu = document.getElementById(`dropdown-${msgKey}`);
+            document.querySelectorAll('.message-dropdown').forEach(el => {
+                if (el !== currentMenu) el.classList.add('hidden');
+            });
+            if (currentMenu) currentMenu.classList.toggle('hidden');
+        };
+
+        window.copyMessage = function(msgKey) {
+            const item = loadedMessages.find(m => m.key === msgKey);
+            if (item) {
+                let textToCopy = item.data.text || '';
+                if (item.data.type === 'audio') textToCopy = '[Pesan Suara]';
+                if (item.data.type === 'image') textToCopy = '[Foto]';
+
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    alert("Pesan berhasil disalin! 📋");
+                }).catch(() => {
+                    alert("Gagal menyalin pesan.");
+                });
+            }
+            const dropdown = document.getElementById(`dropdown-${msgKey}`);
+            if (dropdown) dropdown.classList.add('hidden');
+        };
+
+        window.replyMessageByKey = function(msgKey) {
+            const item = loadedMessages.find(m => m.key === msgKey);
+            if (item) {
+                setReplyMessage(item.data);
+            }
+            const dropdown = document.getElementById(`dropdown-${msgKey}`);
+            if (dropdown) dropdown.classList.add('hidden');
+        };
+
+        function setReplyMessage(data) {
+            let preview = data.text || '';
+            if (data.type === 'audio') preview = '🎙️ Pesan Suara';
+            if (data.type === 'image') preview = '📷 Foto';
+
+            replyData = {
+                senderName: data.senderName,
+                text: preview
+            };
+
+            replyPreviewName.innerText = data.senderName;
+            replyPreviewText.innerText = preview;
+            replyPreviewBar.classList.remove('hidden');
+            messageInput.focus();
+        }
+
+        function cancelReply() {
+            replyData = null;
+            replyPreviewBar.classList.add('hidden');
+        }
+
+        btnCancelReply.addEventListener('click', cancelReply);
+
+        window.editMessage = async function(msgKey, currentText, createdAt) {
+            const dropdown = document.getElementById(`dropdown-${msgKey}`);
+            if (dropdown) dropdown.classList.add('hidden');
+
+            const now = Date.now();
+            const timeDiffMinutes = (now - createdAt) / (1000 * 60);
+
+            if (timeDiffMinutes > 5) {
+                alert("Pesan ini sudah dikirim lebih dari 5 menit dan tidak dapat diedit.");
+                return;
+            }
+
+            const newText = prompt("Edit pesan Anda:", currentText);
+            if (newText !== null && newText.trim() !== "" && newText.trim() !== currentText) {
+                await update(ref(database, `rooms/${activeRoomId}/${msgKey}`), {
+                    text: newText.trim(),
+                    isEdited: true
+                });
+            }
+        };
+
+        function renderMessageBubble(msgKey, data) {
+            const messageDiv = document.createElement('div');
+            const isSelf = data.senderPhone === currentUser.phone;
+
+            messageDiv.className = `flex flex-col max-w-[80%] ${isSelf ? 'self-end items-end' : 'self-start items-start'} animate-float group relative swipe-reply`;
+            messageDiv.style.animationDuration = '6s';
+
+            // SWIPE REPLY GESTURE (Hanya untuk pesan lawan)
+            if (!isSelf) {
+                let startX = 0;
+                let currentX = 0;
+
+                messageDiv.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                }, { passive: true });
+
+                messageDiv.addEventListener('touchmove', (e) => {
+                    currentX = e.touches[0].clientX - startX;
+                    if (currentX > 0 && currentX < 80) {
+                        messageDiv.style.transform = `translateX(${currentX}px)`;
+                    }
+                }, { passive: true });
+
+                messageDiv.addEventListener('touchend', () => {
+                    if (currentX > 40) {
+                        setReplyMessage(data);
+                    }
+                    messageDiv.style.transform = 'translateX(0px)';
+                    startX = 0;
+                    currentX = 0;
+                });
+            }
+
+            const bubbleClass = isSelf 
+                ? 'bg-primary-container text-white rounded-2xl rounded-tr-none shadow-sm' 
+                : 'bg-surface-container text-on-surface rounded-2xl rounded-tl-none shadow-sm border border-primary-fixed/30';
+
+            let statusHtml = '';
+            if (isSelf && !activeContact.isGroup) {
+                if (data.status === 'read') statusHtml = `<span class="text-[10px] tracking-tighter text-white font-bold ml-1">🤍🤍</span>`;
+                else if (data.status === 'delivered') statusHtml = `<span class="material-symbols-outlined text-[11px] leading-none text-white/80 ml-1">done_all</span>`;
+                else statusHtml = `<span class="material-symbols-outlined text-[11px] leading-none text-white/70 ml-1">check</span>`;
+            }
+
+            let replyHtml = '';
+            if (data.replyTo) {
+                replyHtml = `
+                    <div class="bg-black/10 rounded-lg p-1.5 mb-1 text-[10px] border-l-2 border-primary">
+                        <span class="font-bold block text-primary-fixed">${escapeHtml(data.replyTo.senderName)}</span>
+                        <span class="opacity-80 truncate block">${escapeHtml(data.replyTo.text)}</span>
+                    </div>
+                `;
+            }
+
+            let bodyHtml = '';
+            if (data.type === 'audio') bodyHtml = `<audio controls class="max-w-[200px] h-8 my-1 outline-none"><source src="${data.audioData}" type="audio/webm"></audio>`;
+            else if (data.type === 'image') bodyHtml = `<img src="${data.imageData}" class="max-w-[180px] max-h-[220px] rounded-xl object-cover my-1 border border-white/20"/>`;
+            else bodyHtml = `<span>${escapeHtml(data.text || '')}</span>`;
+
+            const editedHtml = data.isEdited ? `<span class="text-[8px] opacity-60 italic mr-1">(diedit)</span>` : '';
+            const senderNameHtml = (activeContact.isGroup && !isSelf) ? `<span class="text-[9px] font-bold text-primary block mb-0.5">${escapeHtml(data.senderName)}</span>` : '';
+
+            // LOGIK MENU TITIK 3 (POJOK KANAN ATAS)
+            const canEdit = isSelf && data.type === 'text' && (Date.now() - (data.createdAt || 0) < 5 * 60 * 1000);
+            
+            let editMenuItem = '';
+            if (isSelf) {
+                if (canEdit) {
+                    editMenuItem = `
+                        <button onclick="window.editMessage('${msgKey}', \`${escapeHtml(data.text || '')}\`, ${data.createdAt || 0})" class="w-full text-left px-3 py-1.5 text-[11px] text-on-surface hover:bg-primary-fixed/30 flex items-center gap-1.5 font-bold">
+                            <span class="material-symbols-outlined text-xs">edit</span> Edit Pesan
+                        </button>
+                    `;
+                } else {
+                    editMenuItem = `
+                        <div class="w-full text-left px-3 py-1.5 text-[11px] text-gray-400 flex items-center gap-1.5 cursor-not-allowed font-medium" title="Batas waktu edit 5 menit telah habis">
+                            <span class="material-symbols-outlined text-xs">edit_off</span> Edit (>5m)
+                        </div>
+                    `;
+                }
+            }
+
+            const dropdownHtml = `
+                <div class="absolute top-1 right-1 z-20">
+                    <button onclick="window.toggleMsgMenu(event, '${msgKey}')" class="message-menu-btn text-current opacity-60 hover:opacity-100 p-0.5 rounded-full transition-opacity">
+                        <span class="material-symbols-outlined text-sm leading-none">more_vert</span>
+                    </button>
+                    <div id="dropdown-${msgKey}" class="message-dropdown hidden absolute right-0 top-6 w-32 bg-surface-container-lowest rounded-xl shadow-lg border border-primary-fixed/40 py-1 z-30 overflow-hidden">
+                        ${editMenuItem}
+                        <button onclick="window.copyMessage('${msgKey}')" class="w-full text-left px-3 py-1.5 text-[11px] text-on-surface hover:bg-primary-fixed/30 flex items-center gap-1.5 font-bold">
+                            <span class="material-symbols-outlined text-xs">content_copy</span> Salin Pesan
+                        </button>
+                        <button onclick="window.replyMessageByKey('${msgKey}')" class="w-full text-left px-3 py-1.5 text-[11px] text-on-surface hover:bg-primary-fixed/30 flex items-center gap-1.5 font-bold">
+                            <span class="material-symbols-outlined text-xs">reply</span> Balas Pesan
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            messageDiv.innerHTML = `
+                <div class="${bubbleClass} pr-7 pl-3.5 py-2 text-xs font-medium leading-relaxed relative">
+                    ${dropdownHtml}
+                    ${senderNameHtml}
+                    ${replyHtml}
+                    ${bodyHtml}
+                    <div class="text-[9px] opacity-70 flex items-center justify-end gap-0.5 mt-1 font-sans">
+                        ${editedHtml}
+                        <span>${data.timestamp || ''}</span>
+                        ${statusHtml}
+                    </div>
+                </div>
+            `;
+
+            chatMessages.appendChild(messageDiv);
+        }
+
+        function updateAvatarElement(element, photoUrl, fallbackName) {
+            if (photoUrl) element.innerHTML = `<img src="${photoUrl}" class="w-full h-full object-cover"/>`;
+            else element.innerHTML = `<span>${fallbackName ? fallbackName.charAt(0).toUpperCase() : '?'}</span>`;
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
